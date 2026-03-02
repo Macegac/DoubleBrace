@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Character Card Creator</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Sortable and VueDraggable -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuedraggable@4.1.0/dist/vuedraggable.umd.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Fallback/Base Theme (Dark Nebula - Neon Vibe) */
+            --bg-color: radial-gradient(circle at 50% 10%, #4a1c6a 0%, #15101a 60%, #08030f 100%);
+            --surface-color: rgba(255, 255, 255, 0.05);
+            --surface-hover: rgba(255, 255, 255, 0.1);
+            --header-bg: rgba(10, 5, 15, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #a19bb0;
+            --accent-pink: #d936c9;
+            --accent-purple: #8e24e6;
+            --node-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --danger: #ff3b5c;
+            --warning: #ff9b33;
+            --success: #00e676;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 16px;
+            --backdrop-blur: blur(20px);
+        }
+
+        [data-theme="light"] {
+            --bg-color: linear-gradient(135deg, #f5f0fa 0%, #e0d5ed 100%);
+            --surface-color: rgba(255, 255, 255, 0.7);
+            --surface-hover: rgba(243, 232, 255, 0.8);
+            --header-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #2d2d2d;
+            --text-muted: #6a5a7a;
+            --accent-pink: #db2777;
+            --accent-purple: #9333ea;
+            --node-bg: rgba(250, 245, 255, 0.6);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.5;
+            transition: var(--transition);
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--header-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            padding: 0.75rem 1rem;
+            box-shadow: var(--shadow);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left,
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn.active,
+        .icon-btn:hover {
+            color: var(--accent-pink);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .header-left .icon-btn {
+            color: var(--text-main);
+        }
+
+        .char-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .char-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background-color: var(--surface-color);
+            border: 1px dashed var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            line-height: 1.1;
+        }
+
+        .char-name-input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            min-width: 120px;
+            outline: none;
+        }
+
+        .char-name-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Quick Export Bar */
+        .quick-actions-bar {
+            display: flex;
+            justify-content: space-around;
+            background: var(--header-bg);
+            backdrop-filter: var(--backdrop-blur);
+            padding: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: none;
+            border: none;
+            gap: 0.25rem;
+        }
+
+        .action-item i {
+            font-size: 1.2rem;
+        }
+
+        .action-item:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Main Content Container */
+        .main-content {
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-bottom: 5rem;
+        }
+
+        .section-title {
+            text-align: center;
+            color: #a0106a;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        /* Layout & Forms */
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            color: inherit;
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-pink);
+        }
+
+        .form-control option {
+            background: var(--surface-color);
+            color: var(--text-main);
+        }
+
+        /* Toggles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: var(--accent-purple);
+            box-shadow: 0 0 10px var(--accent-purple);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Buttons */
+        .primary-btn {
+            background-color: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(142, 36, 230, 0.4);
+        }
+
+        .primary-btn:hover {
+            background-color: var(--accent-pink);
+            box-shadow: 0 6px 20px rgba(217, 54, 201, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Overlays (Loading/Gallery) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+
+        .overlay-content {
+            background: var(--surface-color);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .gallery-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .gallery-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        .gallery-item-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem auto;
+            color: var(--text-muted);
+            font-size: 2rem;
+        }
+
+        /* ACCORDION NODE SYSTEM */
+        .node-container {
+            margin-bottom: 0.5rem;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: rgba(10, 5, 15, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .node-theme-purple {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%), var(--accent-purple);
+        }
+
+        .node-theme-pink {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 100%), var(--accent-pink);
+        }
+
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+        }
+
+        .node-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .node-header-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 500;
+            outline: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        .node-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .node-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .node-btn:hover {
+            color: white;
+        }
+
+        .node-btn.danger:hover {
+            color: #ffb3b3;
+        }
+
+        .node-btn.warning {
+            color: var(--warning);
+            font-size: 1rem;
+        }
+
+        .node-btn.warning:hover {
+            transform: scale(1.1);
+        }
+
+        .node-btn.success {
+            color: var(--success);
+        }
+
+        .node-body {
+            background: var(--node-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            padding: 1rem;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .node-children {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-height: 40px;
+        }
+
+        .node-ghost {
+            opacity: 0.5;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--accent-pink) !important;
+        }
+
+        .macro-btn {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        .macro-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .node-textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .node-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Lists */
+        .library-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Utility */
+        .w-full {
+            width: 100%;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .justify-end {
+            justify-content: flex-end;
+        }
+
+        .mt-1 {
+            margin-top: 0.5rem;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 600px) {
+            header {
+                padding: 0.5rem;
+            }
+
+            .header-left,
+            .header-right {
+                gap: 0.25rem;
+            }
+
+            .icon-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 1.05rem;
+            }
+
+            .char-avatar,
+            .char-avatar-placeholder {
+                width: 32px;
+                height: 32px;
+            }
+
+            .char-avatar-placeholder {
+                font-size: 0.45rem;
+            }
+
+            .char-name-input {
+                font-size: 1rem;
+                min-width: 60px;
+            }
+
+            .quick-actions-bar {
+                padding: 0.5rem;
+            }
+
+            .action-item i {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body :data-theme="settings.darkTheme ? 'dark' : 'light'">
+    <div id="app">
+
+        <!-- Sticky Wrapper -->
+        <div class="sticky-wrapper">
+            <!-- Header -->
+            <header>
+                <div class="header-left">
+                    <i class="fas fa-bars text-muted" style="font-size:1.2rem; cursor:pointer;"
+                        @click="showQuickActions = !showQuickActions"></i>
+                    <div class="char-image-container" @click="triggerImageUpload">
+                        <img v-if="character.image" :src="character.image" class="char-avatar" alt="Character">
+                        <div v-else class="char-avatar-placeholder">
+                            CH Image<br>(Click)
+                        </div>
+                    </div>
+                    <div
+                        style="display: flex; align-items: center; gap: 0.25rem; flex: 1; min-width: 0; max-width: 300px;">
+                        <input type="text" v-model="character.name" class="char-name-input" placeholder="Name...">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button v-if="settings.experimental.autoCharacter" class="icon-btn" style="color: var(--warning);"
+                        @click="showAutoCharModal = true" title="Auto Character"><i class="fas fa-bolt"></i></button>
+                    <button class="icon-btn" :class="{'active': activeTab === 'descriptions'}"
+                        @click="activeTab = 'descriptions'" title="Descriptions"><i
+                            class="fas fa-user-edit"></i></button>
+                    <button class="icon-btn" :class="{'active': activeTab === 'prompts'}" @click="activeTab = 'prompts'"
+                        title="Global Info"><i class="fas fa-globe"></i></button>
+                    <button class="icon-btn" :class="{'active': activeTab === 'library'}" @click="activeTab = 'library'"
+                        title="Library"><i class="fas fa-clipboard-list"></i></button>
+                    <button class="icon-btn" :class="{'active': activeTab === 'settings'}"
+                        @click="activeTab = 'settings'" title="Settings"><i class="fas fa-cog"></i></button>
+                </div>
+                <input type="file" ref="imageUploadInput" style="display:none"
+                    accept="image/png, image/jpeg, image/webp" @change="handleImageUpload">
+            </header>
+
+            <!-- Quick Actions Bar -->
+            <div class="quick-actions-bar" v-show="showQuickActions" style="animation: fadeIn 0.3s;">
+                <button class="action-item" @click="saveToIndexedDB">
+                    <i class="fas fa-save"></i>
+                    <span>Save</span>
+                </button>
+                <button class="action-item" @click="showGallery = true">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Load</span>
+                </button>
+                <button class="action-item" @click="openRawOutput">
+                    <i class="fas fa-code"></i>
+                    <span>Raw Output</span>
+                </button>
+                <button class="action-item" @click="exportPNG">
+                    <i class="fas fa-magic"></i>
+                    <span>Generate PNG</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- Tab: Descriptions -->
+            <div v-if="activeTab === 'descriptions'" style="animation: fadeIn 0.3s;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 class="section-title" style="margin-bottom:0;">Character Descriptions</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="node-btn" @click="expandAll" title="Expand All"><i
+                                class="fas fa-expand-arrows-alt"></i></button>
+                        <button class="node-btn" @click="collapseAll" title="Collapse All"><i
+                                class="fas fa-compress-arrows-alt"></i></button>
+                    </div>
+                </div>
+
+                <draggable v-model="character.extensions.categories" item-key="id" handle=".node-header" animation="200"
+                    ghost-class="node-ghost">
+                    <template #item="{ element: cat }">
+                        <accordion-node v-model:title="cat.name" theme="purple" can-edit can-remove has-save has-add
+                            @remove="removeCategory(cat)" @add="addDescriptor(cat)"
+                            @save="saveToLibrary(cat, 'category')">
+
+                            <draggable class="node-children" v-model="cat.descriptors" item-key="id" group="descriptors"
+                                handle=".node-header" animation="200" ghost-class="node-ghost">
+                                <template #item="{ element: desc }">
+                                    <accordion-node v-model:title="desc.name" theme="pink" can-edit can-remove has-save
+                                        @remove="removeDescriptor(cat, desc)" @save="saveToLibrary(desc, 'descriptor')"
+                                        has-generator :is-generating="isGenerating === desc.id"
+                                        @generate="generateDescriptionAI(cat, desc)">
+
+                                        <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                                            <button class="node-btn macro-btn"
+                                                @click="insertMacro($event, desc, 'content', '{{char}}')"
+                                                title="Insert char macro" v-text="'{{char}}'"></button>
+                                            <button class="node-btn macro-btn"
+                                                @click="insertMacro($event, desc, 'content', '{{user}}')"
+                                                title="Insert user macro" v-text="'{{user}}'"></button>
+                                        </div>
+                                        <textarea class="node-textarea" v-model="desc.content"
+                                            placeholder="Enter description here..."></textarea>
+                                    </accordion-node>
+                                </template>
+                                <template #footer>
+                                    <div v-if="cat.descriptors.length === 0" class="text-muted"
+                                        style="font-size: 0.8rem; padding: 1rem; text-align:center;">
+                                        No descriptors in this category.<br>
+                                        <button
+                                            style="background: none; border: 1px dashed var(--accent-pink); color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; cursor:pointer; margin-top: 0.5rem;"
+                                            @click="addDescriptor(cat)">
+                                            + Add Descriptor
+                                        </button>
+                                    </div>
+                                </template>
+                            </draggable>
+
+                        </accordion-node>
+                    </template>
+                </draggable>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button
+                        style="background: none; border: 1px dashed var(--accent-purple); color: var(--text-muted); padding: 0.5rem 1rem; border-radius: 4px; cursor:pointer;"
+                        @click="addCategory">
+                        + Add Category
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab: Prompts (Global Info) -->
+            <div v-if="activeTab === 'prompts'" style="animation: fadeIn 0.3s;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 class="section-title" style="margin-bottom:0;">Global Info</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="node-btn" @click="expandAll" title="Expand All"><i
+                                class="fas fa-expand-arrows-alt"></i></button>
+                        <button class="node-btn" @click="collapseAll" title="Collapse All"><i
+                                class="fas fa-compress-arrows-alt"></i></button>
+                    </div>
+                </div>
+
+                <accordion-node title="First Message" theme="purple" has-generator
+                    :is-generating="isGenerating === 'first_mes'" @generate="generatePromptAI('first_mes')">
+                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'first_mes', '{{char}}')" title="Insert char macro"
+                            v-text="'{{char}}'"></button>
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'first_mes', '{{user}}')" title="Insert user macro"
+                            v-text="'{{user}}'"></button>
+                    </div>
+                    <textarea class="node-textarea" v-model="character.first_mes"
+                        placeholder="The very first message the character sends..."></textarea>
+                </accordion-node>
+
+                <accordion-node title="Alternate Greetings" theme="purple" has-add @add="addAltGreeting">
+                    <div class="node-children">
+                        <accordion-node v-for="(greeting, i) in character.alternate_greetings" :key="i"
+                            :title="'Alternate Greeting ' + (i+1)" theme="pink" can-remove
+                            @remove="removeAltGreeting(i)" has-generator
+                            :is-generating="isGenerating === 'alt_greeting_' + i" @generate="generateAltGreetingAI(i)">
+                            <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                                <button class="node-btn macro-btn"
+                                    @click="insertMacro($event, character.alternate_greetings, i, '{{char}}')"
+                                    title="Insert char macro" v-text="'{{char}}'"></button>
+                                <button class="node-btn macro-btn"
+                                    @click="insertMacro($event, character.alternate_greetings, i, '{{user}}')"
+                                    title="Insert user macro" v-text="'{{user}}'"></button>
+                            </div>
+                            <textarea class="node-textarea" v-model="character.alternate_greetings[i]"
+                                placeholder="Enter greeting..."></textarea>
+                        </accordion-node>
+                        <div v-if="character.alternate_greetings.length === 0" class="text-muted"
+                            style="font-size: 0.8rem; padding: 1rem; text-align:center;">
+                            No alternate greetings.<br>
+                            <button
+                                style="background: none; border: 1px dashed var(--accent-pink); color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; cursor:pointer; margin-top: 0.5rem;"
+                                @click="addAltGreeting">
+                                + Add Greeting
+                            </button>
+                        </div>
+                    </div>
+                </accordion-node>
+
+                <accordion-node title="Scenario" theme="purple" has-generator
+                    :is-generating="isGenerating === 'scenario'" @generate="generatePromptAI('scenario')">
+                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'scenario', '{{char}}')" title="Insert char macro"
+                            v-text="'{{char}}'"></button>
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'scenario', '{{user}}')" title="Insert user macro"
+                            v-text="'{{user}}'"></button>
+                    </div>
+                    <textarea class="node-textarea" v-model="character.scenario"
+                        placeholder="The setting or scenario..."></textarea>
+                </accordion-node>
+
+                <accordion-node title="Example Dialogs" theme="purple" has-generator
+                    :is-generating="isGenerating === 'mes_example'" @generate="generatePromptAI('mes_example')">
+                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'mes_example', '{{char}}')" title="Insert char macro"
+                            v-text="'{{char}}'"></button>
+                        <button class="node-btn macro-btn"
+                            @click="insertMacro($event, character, 'mes_example', '{{user}}')" title="Insert user macro"
+                            v-text="'{{user}}'"></button>
+                    </div>
+                    <textarea class="node-textarea" v-model="character.mes_example"
+                        placeholder="{{user}}: Hello!&#10;{{char}}: General Kenobi!"></textarea>
+                </accordion-node>
+
+                <accordion-node title="Creator Notes" theme="purple">
+                    <textarea class="node-textarea" v-model="character.creator_notes"
+                        placeholder="Notes from the creator..."></textarea>
+                </accordion-node>
+
+                <accordion-node title="Tags" theme="purple">
+                    <textarea class="node-textarea" v-model="character.tags_input"
+                        placeholder="tag1, tag2, tag3..."></textarea>
+                </accordion-node>
+            </div>
+
+            <!-- Tab: Library -->
+            <div v-if="activeTab === 'library'" style="animation: fadeIn 0.3s;">
+                <h2 class="section-title"><i class="fas fa-clipboard-list" style="margin-right:0.5rem;"></i>Library</h2>
+                <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                    <input type="text" class="form-control" v-model="librarySearch" placeholder="Search library...">
+                </div>
+
+                <div v-if="filteredLibrary.length === 0" class="text-center text-muted mt-2">
+                    Library is empty or no matches found. Save items from Descriptions tab.
+                </div>
+
+                <div v-for="item in filteredLibrary" :key="item.id" class="library-list-item">
+                    <div>
+                        <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">
+                            {{ item.type }}
+                        </span><br>
+                        <span style="font-weight:500;">{{ item.data.name }}</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="node-btn" title="Add to Workspace" @click="loadFromLibrary(item)"><i
+                                class="fas fa-plus"></i></button>
+                        <button class="node-btn danger" title="Delete from Library"
+                            @click="deleteFromLibrary(item.id)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Settings -->
+            <div v-if="activeTab === 'settings'" style="animation: fadeIn 0.3s;">
+                <h2 class="section-title">Options</h2>
+
+                <div class="node-container node-theme-purple" style="padding: 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                        <label style="color:white; font-weight:500;">Enable AI Features</label>
+                        <label class="switch">
+                            <input type="checkbox" v-model="settings.aiEnabled">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div v-if="settings.aiEnabled"
+                        style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                        <label class="form-label" style="color:white;">AI Provider</label>
+                        <select v-model="settings.aiProvider" class="form-control mb-1">
+                            <option value="openrouter">OpenRouter</option>
+                            <option value="gemini">Gemini</option>
+                        </select>
+
+                        <label class="form-label" style="color:white;">API Key</label>
+                        <input type="password" v-model="settings.apiKey" class="form-control mb-1"
+                            placeholder="Enter API Key...">
+
+                        <div v-show="settings.aiProvider === 'openrouter'">
+                            <label class="form-label" style="color:white;">Model Name (OpenRouter)</label>
+                            <input type="text" v-model="settings.modelName" class="form-control mb-1"
+                                placeholder="e.g. google/gemini-2.5-pro">
+                        </div>
+
+                        <button class="primary-btn mt-1 w-full" @click="testAIConnection" :disabled="isTestingAI">
+                            <i class="fas" :class="isTestingAI ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+                            {{ isTestingAI ? 'Testing...' : 'Test Connection' }}
+                        </button>
+                        <div v-if="connectionStatus.message"
+                            :style="{color: connectionStatus.success ? 'var(--success)' : 'var(--danger)', marginTop: '0.5rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: '500'}">
+                            {{ connectionStatus.message }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="node-container node-theme-purple" style="padding: 1rem; margin-top: 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="color:white; font-weight:500;"><i class="fas fa-flask"
+                                style="color:var(--warning); margin-right:0.5rem;"></i>Experimental Features</label>
+                    </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="color:white; font-size: 0.9rem;">Auto Character (Generates full profile from a
+                                prompt)</label>
+                            <label class="switch">
+                                <input type="checkbox" v-model="settings.experimental.autoCharacter">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="node-container node-theme-purple" style="padding: 1rem; margin-top: 1rem;">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                        <label style="color:white; font-weight:500;">Card Metadata</label>
+                    </div>
+                    <div>
+                        <label class="form-label"
+                            style="color:white; font-size: 0.85rem; display:block; margin-bottom:0.25rem;">Author
+                            (applied to all exported cards)</label>
+                        <input type="text" v-model="settings.defaultAuthor" class="form-control"
+                            placeholder="Enter author name...">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <accordion-node title="Theme Settings" theme="purple">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                            <label style="color:white; font-weight:500;">Active Theme</label>
+                            <select v-model="settings.currentThemeId" class="form-control" style="width: 200px;"
+                                @change="applyTheme">
+                                <option value="defaultDark">Dark Nebula (Default)</option>
+                                <option value="defaultLight">Light Aurora (Default)</option>
+                                <option v-for="t in savedThemes" :key="t.id" :value="t.id">{{ t.name }}</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                            <button class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;"
+                                @click="saveCustomTheme"><i class="fas fa-save"></i> Save</button>
+                            <button class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;"
+                                @click="deleteCustomTheme"
+                                v-if="settings.currentThemeId !== 'defaultDark' && settings.currentThemeId !== 'defaultLight'"><i
+                                    class="fas fa-trash"></i> Delete</button>
+                            <button class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;"
+                                @click="exportTheme"><i class="fas fa-download"></i> Export</button>
+                            <button class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;"
+                                @click="$refs.themeUploadInput.click()"><i class="fas fa-upload"></i> Import</button>
+                            <input type="file" ref="themeUploadInput" style="display:none" accept=".json"
+                                @change="importTheme">
+                        </div>
+
+                        <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1rem;">
+                            <h4 style="margin-bottom: 0.75rem; color: white; font-size: 0.95rem;">Edit Variables</h4>
+                            <div v-for="(val, key) in currentThemeVars" :key="key"
+                                style="display:flex; align-items:center; margin-bottom: 0.5rem;">
+                                <label
+                                    style="width: 120px; font-size: 0.75rem; color:var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+                                    :title="key">{{ key }}</label>
+                                <input type="text" v-model="currentThemeVars[key]" class="form-control"
+                                    @input="debouncedApplyTheme"
+                                    style="flex:1; padding: 0.4rem; font-size: 0.8rem; font-family: monospace;">
+                                <input v-if="val && val.toString().startsWith('#')" type="color"
+                                    v-model="currentThemeVars[key]" @input="debouncedApplyTheme"
+                                    style="width: 28px; height: 28px; margin-left: 0.5rem; border:none; padding:0; cursor:pointer; background:none; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </accordion-node>
+                </div>
+            </div>
+        </main>
+
+        <!-- Raw Output Overlay -->
+        <div v-if="showRawOutput" class="overlay" @click.self="showRawOutput = false">
+            <div class="overlay-content" style="max-width: 800px; width: 95%;">
+                <div
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;">Raw JSON Output</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="showRawOutput = false"><i
+                            class="fas fa-times"></i></button>
+                </div>
+                <textarea class="form-control" style="font-family: monospace; height: 60vh; resize: vertical;"
+                    readonly>{{ rawOutputJSON }}</textarea>
+                <div style="display:flex; justify-content:flex-end; gap: 1rem; margin-top: 1rem;">
+                    <button class="primary-btn" @click="copyRawOutput"><i class="fas fa-copy"></i> Copy</button>
+                    <button class="primary-btn" @click="downloadJSON"><i class="fas fa-download"></i> Download</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto Character Overlay -->
+        <div v-if="showAutoCharModal" class="overlay" @click.self="showAutoCharModal = false">
+            <div class="overlay-content" style="max-width: 600px;">
+                <div
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;"><i class="fas fa-bolt"
+                            style="color:var(--warning); margin-right:0.5rem;"></i>Auto Character Generator</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="showAutoCharModal = false"><i
+                            class="fas fa-times"></i></button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label
+                            style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Card
+                            Name <span style="color:var(--danger)">* (Required)</span></label>
+                        <input type="text" v-model="autoCharData.cardName" class="form-control" style="width:100%;"
+                            placeholder="e.g. Master Chief">
+                    </div>
+
+                    <div>
+                        <label
+                            style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">First
+                            Name <span style="color:var(--danger)">* (Required)</span></label>
+                        <input type="text" v-model="autoCharData.firstName" class="form-control" style="width:100%;"
+                            placeholder="e.g. John">
+                    </div>
+
+                    <div>
+                        <label
+                            style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Middle
+                            Name <span style="color:var(--text-muted)">(Optional)</span></label>
+                        <input type="text" v-model="autoCharData.middleName" class="form-control" style="width:100%;">
+                    </div>
+
+                    <div>
+                        <label
+                            style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Last
+                            Name <span style="color:var(--text-muted)">(Optional)</span></label>
+                        <input type="text" v-model="autoCharData.lastName" class="form-control" style="width:100%;">
+                    </div>
+
+                    <div style="display:flex; gap: 1rem;">
+                        <div style="flex:1;">
+                            <label
+                                style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Age
+                                <span style="color:var(--text-muted)">(Optional)</span></label>
+                            <input type="text" v-model="autoCharData.age" class="form-control" style="width:100%;"
+                                placeholder="e.g. 42">
+                        </div>
+                        <div style="flex:1;">
+                            <label
+                                style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Sex
+                                <span style="color:var(--text-muted)">(Optional)</span></label>
+                            <input type="text" v-model="autoCharData.sex" class="form-control" style="width:100%;"
+                                placeholder="e.g. Male">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            style="color:white; font-size: 0.85rem; font-weight: 500; display:block; margin-bottom:0.25rem;">Relationship
+                            to {{user}}
+                            <span style="color:var(--text-muted)">(Optional)</span></label>
+                        <input type="text" v-model="autoCharData.relationship" class="form-control" style="width:100%;"
+                            placeholder="e.g. Best Friend">
+                    </div>
+                </div>
+
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Describe what kind of character you want. The AI will completely wipe and regenerate your Character
+                    Descriptions with new categories and descriptors.
+                </p>
+
+                <textarea class="node-textarea"
+                    style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: var(--border-radius); color: white;"
+                    v-model="autoCharData.prompt"
+                    placeholder="E.g. A grumpy cyberpunk hacker who loves cats..."></textarea>
+
+                <div style="display:flex; justify-content:flex-end; gap: 1rem; margin-top: 1rem;">
+                    <button class="primary-btn" style="background: transparent; border: 1px solid var(--border-color);"
+                        @click="showAutoCharModal = false">Cancel</button>
+                    <button class="primary-btn" @click="autoGenerateCharacter"
+                        :disabled="isGenerating === 'autoCharacter'">
+                        <i class="fas"
+                            :class="isGenerating === 'autoCharacter' ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
+                        {{ isGenerating === 'autoCharacter' ? 'Generating...' : 'Generate Profile' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Overlay -->
+        <div v-if="showGallery" class="overlay" @click.self="showGallery = false">
+            <div class="overlay-content">
+                <div
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;">Load Character</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="showGallery = false"><i
+                            class="fas fa-times"></i></button>
+                </div>
+
+                <div v-if="savedCharacters.length === 0" class="text-center text-muted">
+                    No characters saved yet.
+                </div>
+
+                <div class="gallery-grid">
+                    <div v-for="char in savedCharacters" :key="char.id" class="gallery-item"
+                        @click="loadFromGallery(char)">
+                        <img v-if="char.image" :src="char.image" alt="Avatar">
+                        <div v-else class="gallery-item-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div
+                            style="font-size:0.8rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            {{ char.name || 'Unnamed' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Accordion Node Template -->
+    <script type="text/x-template" id="accordion-node-template">
+        <div class="node-container">
+            <div class="node-header" :class="'node-theme-' + theme" @click="isOpen = !isOpen">
+                <div class="node-header-left" @click.stop v-if="isEditing">
+                    <input type="text" ref="titleInput" v-model="editedTitle" @blur="finishEdit" @keyup.enter="finishEdit" class="node-header-input">
+                </div>
+                <div class="node-header-left" v-else>
+                    {{ title }}
+                    <button v-if="canEdit" class="node-btn" style="color:var(--warning)" @click.stop="startEdit" title="Rename"><i class="fas fa-pencil-alt"></i></button>
+                </div>
+
+                <div class="node-header-right">
+                    <button v-if="hasSave" class="node-btn" @click.stop="$emit('save')" title="Save to Library"><i class="fas fa-save"></i></button>
+                    <button v-if="hasAdd" class="node-btn" @click.stop="$emit('add')" title="Add Child"><i class="fas fa-plus"></i></button>
+                    <button v-if="canRemove" class="node-btn danger" @click.stop="$emit('remove')" title="Remove"><i class="fas fa-trash"></i></button>
+                    <i class="fas" :class="isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </div>
+            </div>
+            <div v-show="isOpen" class="node-body">
+                <slot></slot>
+                <div v-if="hasGenerator" class="flex justify-end mt-1">
+                    <button class="node-btn warning" @click="$emit('generate')" title="Generate with AI">
+                        <i class="fas fa-bolt" :class="{ 'fa-spin': isGenerating }"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        const { createApp, ref, reactive, nextTick, onMounted, computed, watch, provide, inject } = Vue;
+
+        // --- IndexedDB Helper ---
+        const DB_NAME = 'CharaCreatorDB';
+        const DB_VERSION = 2;
+        const STORE_CHARS = 'characters';
+        const STORE_LIB = 'library';
+        const STORE_THEMES = 'themes';
+
+        const openDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_CHARS)) {
+                        db.createObjectStore(STORE_CHARS, { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_LIB)) {
+                        db.createObjectStore(STORE_LIB, { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_THEMES)) {
+                        db.createObjectStore(STORE_THEMES, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        };
+
+        const dbGetAll = async (storeName) => {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const query = store.getAll();
+                query.onsuccess = () => resolve(query.result);
+                query.onerror = () => reject(query.error);
+            });
+        };
+
+        const dbPut = async (storeName, item) => {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const query = store.put(item);
+                query.onsuccess = () => resolve();
+                query.onerror = () => reject(query.error);
+            });
+        };
+
+        const dbDelete = async (storeName, id) => {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const query = store.delete(id);
+                query.onsuccess = () => resolve();
+                query.onerror = () => reject(query.error);
+            });
+        };
+
+        // --- Accordion Component ---
+        const AccordionNode = {
+            template: '#accordion-node-template',
+            props: {
+                title: String,
+                theme: { type: String, default: 'purple' },
+                canEdit: { type: Boolean, default: false },
+                canRemove: { type: Boolean, default: false },
+                hasGenerator: { type: Boolean, default: false },
+                isGenerating: { type: Boolean, default: false },
+                hasSave: { type: Boolean, default: false },
+                hasAdd: { type: Boolean, default: false }
+            },
+            emits: ['update:title', 'add', 'remove', 'generate', 'save'],
+            setup(props, { emit }) {
+                const isOpen = ref(false);
+                const isEditing = ref(false);
+                const editedTitle = ref(props.title);
+                const titleInput = ref(null);
+
+                const startEdit = () => {
+                    isEditing.value = true;
+                    editedTitle.value = props.title;
+                    nextTick(() => { if (titleInput.value) titleInput.value.focus(); });
+                };
+
+                const finishEdit = () => {
+                    isEditing.value = false;
+                    emit('update:title', editedTitle.value);
+                };
+
+                const expandTrigger = inject('expandTrigger', ref(0));
+                const collapseTrigger = inject('collapseTrigger', ref(0));
+
+                watch(expandTrigger, () => isOpen.value = true);
+                watch(collapseTrigger, () => isOpen.value = false);
+
+                return { isOpen, isEditing, editedTitle, titleInput, startEdit, finishEdit };
+            }
+        };
+
+        // --- Main App ---
+        const app = createApp({
+            components: { AccordionNode, draggable: window.vuedraggable },
+            setup() {
+                const globalExpandTrigger = ref(0);
+                const globalCollapseTrigger = ref(0);
+                provide('expandTrigger', globalExpandTrigger);
+                provide('collapseTrigger', globalCollapseTrigger);
+
+                const expandAll = () => globalExpandTrigger.value++;
+                const collapseAll = () => globalCollapseTrigger.value++;
+
+                const activeTab = ref('descriptions');
+                const imageUploadInput = ref(null);
+                const showGallery = ref(false);
+                const showQuickActions = ref(false);
+                const showRawOutput = ref(false);
+                const showAutoCharModal = ref(false);
+                const rawOutputJSON = ref('');
+                const autoCharData = reactive({
+                    cardName: '',
+                    firstName: '',
+                    middleName: '',
+                    lastName: '',
+                    age: '',
+                    sex: '',
+                    relationship: '',
+                    prompt: ''
+                });
+                const themeUploadInput = ref(null);
+
+                // State Data
+                const character = reactive({
+                    id: Date.now().toString(),
+                    name: '',
+                    creator: '',
+                    description: '',
+                    scenario: '',
+                    first_mes: '',
+                    mes_example: '',
+                    creator_notes: '',
+                    tags_input: '',
+                    alternate_greetings: [],
+                    extensions: {
+                        categories: []
+                    },
+                    image: null
+                });
+
+                const settings = reactive({
+                    currentThemeId: 'defaultDark',
+                    aiEnabled: false,
+                    aiProvider: 'gemini',
+                    apiKey: '',
+                    modelName: 'google/gemini-2.5-pro',
+                    defaultAuthor: '',
+                    experimental: {
+                        autoCharacter: false
+                    }
+                });
+
+                const library = ref([]);
+                const savedCharacters = ref([]);
+                const savedThemes = ref([]);
+                const librarySearch = ref('');
+
+                const connectionStatus = reactive({ message: '', success: false });
+                const isTestingAI = ref(false);
+                const isGenerating = ref(null); // stores ID or field name being generated
+
+                // Computed
+                const filteredLibrary = computed(() => {
+                    if (!librarySearch.value) return library.value;
+                    const l = librarySearch.value.toLowerCase();
+                    return library.value.filter(item => item.data.name.toLowerCase().includes(l));
+                });
+
+                // Theme Logic
+                const defaultThemes = {
+                    defaultDark: {
+                        id: 'defaultDark', name: 'Dark Nebula',
+                        vars: {
+                            '--bg-color': 'radial-gradient(circle at 50% 10%, #4a1c6a 0%, #15101a 60%, #08030f 100%)',
+                            '--surface-color': 'rgba(255, 255, 255, 0.05)',
+                            '--surface-hover': 'rgba(255, 255, 255, 0.1)',
+                            '--header-bg': 'rgba(10, 5, 15, 0.6)',
+                            '--text-main': '#ffffff',
+                            '--text-muted': '#a19bb0',
+                            '--accent-pink': '#d936c9',
+                            '--accent-purple': '#8e24e6',
+                            '--node-bg': 'rgba(255, 255, 255, 0.03)',
+                            '--border-color': 'rgba(255, 255, 255, 0.08)',
+                            '--danger': '#ff3b5c',
+                            '--warning': '#ff9b33',
+                            '--success': '#00e676',
+                            '--shadow': '0 8px 32px rgba(0, 0, 0, 0.5)',
+                            '--transition': 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '--border-radius': '16px',
+                            '--backdrop-blur': 'blur(20px)'
+                        }
+                    },
+                    defaultLight: {
+                        id: 'defaultLight', name: 'Light Aurora',
+                        vars: {
+                            '--bg-color': 'linear-gradient(135deg, #f5f0fa 0%, #e0d5ed 100%)',
+                            '--surface-color': 'rgba(255, 255, 255, 0.7)',
+                            '--surface-hover': 'rgba(243, 232, 255, 0.8)',
+                            '--header-bg': 'rgba(255, 255, 255, 0.85)',
+                            '--text-main': '#2d2d2d',
+                            '--text-muted': '#6a5a7a',
+                            '--accent-pink': '#db2777',
+                            '--accent-purple': '#9333ea',
+                            '--node-bg': 'rgba(250, 245, 255, 0.6)',
+                            '--border-color': 'rgba(0, 0, 0, 0.08)',
+                            '--danger': '#e11d48',
+                            '--warning': '#f59e0b',
+                            '--success': '#10b981',
+                            '--shadow': '0 8px 32px rgba(0, 0, 0, 0.05)',
+                            '--transition': 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '--border-radius': '8px',
+                            '--backdrop-blur': 'blur(12px)'
+                        }
+                    }
+                };
+                const currentThemeVars = reactive({ ...defaultThemes.defaultDark.vars });
+
+                const applyTheme = () => {
+                    let activeTheme = defaultThemes[settings.currentThemeId];
+                    if (!activeTheme) {
+                        activeTheme = savedThemes.value.find(t => t.id === settings.currentThemeId);
+                        if (!activeTheme) {
+                            settings.currentThemeId = 'defaultDark';
+                            activeTheme = defaultThemes.defaultDark;
+                        }
+                    }
+                    Object.assign(currentThemeVars, activeTheme.vars);
+                    updateCSSVariables();
+                };
+
+                const updateCSSVariables = () => {
+                    const root = document.documentElement;
+                    for (const [key, value] of Object.entries(currentThemeVars)) {
+                        root.style.setProperty(key, value);
+                    }
+                    localStorage.setItem('charaCreatorSettings', JSON.stringify(settings));
+                };
+
+                let themeTimeout;
+                const debouncedApplyTheme = () => {
+                    clearTimeout(themeTimeout);
+                    themeTimeout = setTimeout(() => {
+                        updateCSSVariables();
+                    }, 100);
+                };
+
+                const saveCustomTheme = async () => {
+                    const name = prompt("Enter a name for this theme:");
+                    if (!name) return;
+
+                    const newTheme = {
+                        id: 'theme_' + Date.now().toString(),
+                        name: name,
+                        vars: { ...currentThemeVars }
+                    };
+                    await dbPut(STORE_THEMES, newTheme);
+                    await reloadDBData();
+                    // Wait for next tick so Vue updates the dropdown <options> list
+                    nextTick(() => {
+                        settings.currentThemeId = newTheme.id;
+                        applyTheme();
+                        alert("Theme saved!");
+                    });
+                };
+
+                const deleteCustomTheme = async () => {
+                    if (confirm("Delete this custom theme?")) {
+                        await dbDelete(STORE_THEMES, settings.currentThemeId);
+                        settings.currentThemeId = 'defaultDark';
+                        await reloadDBData();
+                        applyTheme();
+                    }
+                };
+
+                const exportTheme = () => {
+                    const activeTheme = savedThemes.value.find(t => t.id === settings.currentThemeId) || {
+                        id: settings.currentThemeId,
+                        name: settings.currentThemeId === 'defaultDark' ? 'Dark Nebula' : 'Light Aurora',
+                        vars: currentThemeVars
+                    };
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activeTheme, null, 2));
+                    const dump = document.createElement('a');
+                    dump.setAttribute("href", dataStr);
+                    dump.setAttribute("download", activeTheme.name + "_theme.json");
+                    document.body.appendChild(dump);
+                    dump.click();
+                    dump.remove();
+                };
+
+                const importTheme = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            if (imported.vars) {
+                                imported.id = 'theme_' + Date.now().toString();
+                                await dbPut(STORE_THEMES, imported);
+                                await reloadDBData();
+                                nextTick(() => {
+                                    settings.currentThemeId = imported.id;
+                                    applyTheme();
+                                    alert("Theme imported successfully!");
+                                });
+                            } else {
+                                alert("Invalid theme file.");
+                            }
+                        } catch (err) {
+                            alert("Error reading file.");
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = null;
+                };
+
+                onMounted(async () => {
+                    // Load DB Data first so dropdown options exist
+                    await reloadDBData();
+
+                    // Load settings
+                    const savedSettings = localStorage.getItem('charaCreatorSettings');
+                    if (savedSettings) {
+                        try {
+                            const parsed = JSON.parse(savedSettings);
+                            // Backward compatibility for darkTheme boolean
+                            if (parsed.darkTheme !== undefined && !parsed.currentThemeId) {
+                                parsed.currentThemeId = parsed.darkTheme ? 'defaultDark' : 'defaultLight';
+                            }
+                            if (!parsed.experimental) {
+                                parsed.experimental = { autoCharacter: false };
+                            }
+                            if (parsed.defaultAuthor === undefined) {
+                                parsed.defaultAuthor = '';
+                            }
+                            Object.assign(settings, parsed);
+                        } catch (e) { }
+                    }
+
+                    // Add default category if empty
+                    if (character.extensions.categories.length === 0) {
+                        addCategory();
+                    }
+
+                    // Always apply reactive theme after loading settings and DB
+                    nextTick(() => {
+                        applyTheme();
+                    });
+                });
+
+                watch(settings, () => {
+                    localStorage.setItem('charaCreatorSettings', JSON.stringify(settings));
+                }, { deep: true });
+
+                // DB Actions
+                const reloadDBData = async () => {
+                    try {
+                        savedCharacters.value = await dbGetAll(STORE_CHARS);
+                        library.value = await dbGetAll(STORE_LIB);
+                        // Also load themes
+                        try { savedThemes.value = await dbGetAll(STORE_THEMES); } catch (ex) { }
+                    } catch (e) { console.error("DB Error", e); }
+                };
+
+                const saveToIndexedDB = async () => {
+                    try {
+                        await dbPut(STORE_CHARS, JSON.parse(JSON.stringify(character)));
+                        await reloadDBData();
+                        alert("Character saved to Gallery!");
+                    } catch (e) { alert("Failed to save."); }
+                };
+
+                const loadFromGallery = (char) => {
+                    const defaultChar = {
+                        id: Date.now().toString(),
+                        name: '',
+                        creator: '',
+                        description: '',
+                        scenario: '',
+                        first_mes: '',
+                        mes_example: '',
+                        creator_notes: '',
+                        tags_input: '',
+                        alternate_greetings: [],
+                        extensions: { categories: [] },
+                        image: null
+                    };
+                    Object.assign(character, defaultChar, JSON.parse(JSON.stringify(char)));
+                    showGallery.value = false;
+                };
+
+                // Node Management
+                const addCategory = () => {
+                    character.extensions.categories.push({
+                        id: 'cat_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000),
+                        name: 'New Category',
+                        descriptors: []
+                    });
+                };
+                const removeCategory = (cat) => {
+                    const idx = character.extensions.categories.indexOf(cat);
+                    if (idx > -1) character.extensions.categories.splice(idx, 1);
+                };
+                const addDescriptor = (cat) => {
+                    cat.descriptors.push({
+                        id: 'desc_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000),
+                        name: 'New Descriptor',
+                        content: ''
+                    });
+                };
+                const removeDescriptor = (cat, desc) => {
+                    const idx = cat.descriptors.indexOf(desc);
+                    if (idx > -1) cat.descriptors.splice(idx, 1);
+                };
+
+                // Global Prompts
+                const addAltGreeting = () => character.alternate_greetings.push('');
+                const removeAltGreeting = (index) => character.alternate_greetings.splice(index, 1);
+
+                // Library Management
+                const saveToLibrary = async (item, type) => {
+                    const confirmSave = confirm(`Save ${type} "${item.name}" to library?`);
+                    if (!confirmSave) return;
+
+                    const libItem = {
+                        id: 'lib_' + Date.now().toString(),
+                        type: type, // 'category' or 'descriptor'
+                        data: JSON.parse(JSON.stringify(item))
+                    };
+                    await dbPut(STORE_LIB, libItem);
+                    await reloadDBData();
+                    alert("Saved to library!");
+                };
+
+                const deleteFromLibrary = async (id) => {
+                    if (confirm("Delete this from library?")) {
+                        await dbDelete(STORE_LIB, id);
+                        await reloadDBData();
+                    }
+                };
+
+                const loadFromLibrary = (item) => {
+                    if (!confirm(`Add ${item.type} "${item.data.name}" to workspace?`)) return;
+
+                    const clone = JSON.parse(JSON.stringify(item.data));
+                    // Renew IDs to avoid duplicates
+                    if (item.type === 'category') {
+                        clone.id = 'cat_' + Date.now().toString();
+                        clone.descriptors.forEach(d => d.id = 'desc_' + Math.random().toString());
+                        character.extensions.categories.push(clone);
+                    } else {
+                        // Just push a descriptor to the last category or create one
+                        clone.id = 'desc_' + Date.now().toString();
+                        if (character.extensions.categories.length === 0) addCategory();
+                        character.extensions.categories[character.extensions.categories.length - 1].descriptors.push(clone);
+                    }
+                    alert("Added to workspace!");
+                };
+
+                // File Uploads
+                const triggerImageUpload = () => imageUploadInput.value.click();
+                const handleImageUpload = (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => character.image = e.target.result;
+                        reader.readAsDataURL(file);
+                    }
+                };
+
+                // Build V2 Character Spec Export Object
+                const getExportableChar = () => {
+                    let combinedDescription = (character.description || '').trim();
+                    if (character.extensions && character.extensions.categories) {
+                        character.extensions.categories.forEach(cat => {
+                            if (cat.name && cat.descriptors && cat.descriptors.length > 0) {
+                                combinedDescription += '\n\n[' + cat.name + ']';
+                                cat.descriptors.forEach(desc => {
+                                    const descName = desc.name ? desc.name + ': ' : '';
+                                    if (descName || desc.content) {
+                                        combinedDescription += '\n' + descName + (desc.content || '');
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    const tagsArray = (character.tags_input || "").split(',').map(t => t.trim()).filter(t => t);
+
+                    const charData = {
+                        name: character.name || "",
+                        description: combinedDescription.trim(),
+                        personality: "",
+                        scenario: character.scenario || "",
+                        first_mes: character.first_mes || "",
+                        mes_example: character.mes_example || "",
+                        system_prompt: "",
+                        creator_notes: character.creator_notes || "",
+                        alternate_greetings: [...character.alternate_greetings],
+                        character_book: null,
+                        tags: tagsArray,
+                        creator: character.creator || settings.defaultAuthor || "",
+                        character_version: "main",
+                        extensions: {}
+                    };
+
+                    return {
+                        spec: "chara_card_v2",
+                        spec_version: "2.0",
+                        data: charData
+                    };
+                };
+
+                // Export/Download
+                const openRawOutput = () => {
+                    rawOutputJSON.value = JSON.stringify(getExportableChar(), null, 2);
+                    showRawOutput.value = true;
+                };
+
+                const copyRawOutput = () => {
+                    navigator.clipboard.writeText(rawOutputJSON.value);
+                    alert("Copied to clipboard!");
+                };
+
+                const downloadJSON = () => {
+                    const jsonToDownload = rawOutputJSON.value || JSON.stringify(getExportableChar(), null, 2);
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonToDownload);
+                    const dump = document.createElement('a');
+                    dump.setAttribute("href", dataStr);
+                    dump.setAttribute("download", (character.name || "character") + ".json");
+                    document.body.appendChild(dump);
+                    dump.click();
+                    dump.remove();
+                };
+
+
+                // --- PNG Generation Utilities ---
+                const makeCRCTable = () => {
+                    let c;
+                    let crcTable = [];
+                    for (let n = 0; n < 256; n++) {
+                        c = n;
+                        for (let k = 0; k < 8; k++) {
+                            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+                        }
+                        crcTable[n] = c;
+                    }
+                    return crcTable;
+                };
+                const crcTable = makeCRCTable();
+                const crc32Bytes = (arr) => {
+                    let crc = 0 ^ (-1);
+                    for (let i = 0; i < arr.length; i++) {
+                        crc = (crc >>> 8) ^ crcTable[(crc ^ arr[i]) & 0xFF];
+                    }
+                    return (crc ^ (-1)) >>> 0;
+                };
+
+                const uint8ArrayToBase64 = (bytes) => {
+                    let binary = '';
+                    const chunkSize = 0x8000;
+                    for (let i = 0; i < bytes.length; i += chunkSize) {
+                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+                    }
+                    return 'data:image/png;base64,' + btoa(binary);
+                };
+
+                const base64ToUint8Array = (b64) => {
+                    const binStr = atob(b64.split(',')[1]);
+                    const len = binStr.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binStr.charCodeAt(i);
+                    }
+                    return bytes;
+                };
+
+                const createTextChunk = (keyword, dataStr) => {
+                    const encoder = new TextEncoder();
+                    const keywordBytes = encoder.encode(keyword + '\0');
+                    const dataBytes = encoder.encode(dataStr);
+                    const chunkData = new Uint8Array(keywordBytes.length + dataBytes.length);
+                    chunkData.set(keywordBytes, 0);
+                    chunkData.set(dataBytes, keywordBytes.length);
+
+                    const typeBytes = encoder.encode('tEXt');
+                    const crcData = new Uint8Array(4 + chunkData.length);
+                    crcData.set(typeBytes, 0);
+                    crcData.set(chunkData, 4);
+                    const crcValue = crc32Bytes(crcData);
+
+                    const chunk = new Uint8Array(4 + 4 + chunkData.length + 4);
+                    const view = new DataView(chunk.buffer);
+                    view.setUint32(0, chunkData.length, false);
+                    chunk.set(typeBytes, 4);
+                    chunk.set(chunkData, 8);
+                    view.setUint32(8 + chunkData.length, crcValue, false);
+                    return chunk;
+                };
+
+                const insertChunk = (pngBytes, chunkBytes) => {
+                    let offset = 8;
+                    while (offset < pngBytes.length) {
+                        const view = new DataView(pngBytes.buffer);
+                        const len = view.getUint32(offset, false);
+                        const type = new TextDecoder().decode(pngBytes.subarray(offset + 4, offset + 8));
+                        if (type === 'IDAT') {
+                            const newPng = new Uint8Array(pngBytes.length + chunkBytes.length);
+                            newPng.set(pngBytes.subarray(0, offset), 0);
+                            newPng.set(chunkBytes, offset);
+                            newPng.set(pngBytes.subarray(offset), offset + chunkBytes.length);
+                            return newPng;
+                        }
+                        offset += 4 + 4 + len + 4;
+                    }
+                    return pngBytes;
+                };
+
+                const ensurePNG = (dataUrl) => {
+                    return new Promise((resolve, reject) => {
+                        if (dataUrl.startsWith('data:image/png')) {
+                            resolve(dataUrl);
+                            return;
+                        }
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        img.onerror = () => reject(new Error("Failed to load image for PNG conversion"));
+                        img.src = dataUrl;
+                    });
+                };
+
+                const exportPNG = async () => {
+                    if (!character.image) {
+                        alert("Please upload a Character Image first to generate a PNG.");
+                        return;
+                    }
+                    try {
+                        const pngDataUrl = await ensurePNG(character.image);
+                        const jsonStr = JSON.stringify(getExportableChar());
+
+                        const utf8Bytes = new TextEncoder().encode(jsonStr);
+                        let binaryStr = "";
+                        for (let i = 0; i < utf8Bytes.length; i++) {
+                            binaryStr += String.fromCharCode(utf8Bytes[i]);
+                        }
+                        const b64Json = btoa(binaryStr);
+
+                        const pngBytes = base64ToUint8Array(pngDataUrl);
+                        const chunkBytes = createTextChunk('chara', b64Json);
+                        const newPngBytes = insertChunk(pngBytes, chunkBytes);
+
+                        const finalB64 = uint8ArrayToBase64(newPngBytes);
+
+                        const dump = document.createElement('a');
+                        dump.setAttribute("href", finalB64);
+                        dump.setAttribute("download", (character.name || "character_v2") + ".png");
+                        document.body.appendChild(dump);
+                        dump.click();
+                        dump.remove();
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error generating PNG: " + e.message);
+                    }
+                };
+
+                // AI Integration
+                const callAI = async (promptMsg) => {
+                    if (!settings.aiEnabled || !settings.apiKey) {
+                        alert("Please enable AI and set an API Key in Settings.");
+                        return null;
+                    }
+
+                    const systemPrompt = "You are a creative writing assistant for roleplay character development. Keep your response concise, relevant, and well-formatted. Output only the requested text without markdown backticks unless requested. No pleasantries.";
+
+                    try {
+                        if (settings.aiProvider === 'gemini') {
+                            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${settings.apiKey}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [
+                                        { parts: [{ text: systemPrompt + "\n\n" + promptMsg }] }
+                                    ]
+                                })
+                            });
+                            const data = await res.json();
+                            if (data.error) throw new Error(data.error.message);
+                            return data.candidates[0].content.parts[0].text;
+                        }
+                        else if (settings.aiProvider === 'openrouter') {
+                            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${settings.apiKey}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    model: settings.modelName,
+                                    messages: [
+                                        { role: "system", content: systemPrompt },
+                                        { role: "user", content: promptMsg }
+                                    ]
+                                })
+                            });
+                            const data = await res.json();
+                            if (data.error) throw new Error(data.error.message);
+                            return data.choices[0].message.content;
+                        }
+                    } catch (err) {
+                        alert("AI Error: " + err.message);
+                        return null;
+                    }
+                };
+
+                const testAIConnection = async () => {
+                    isTestingAI.value = true;
+                    connectionStatus.message = '';
+                    const result = await callAI("Reply with 'OK'");
+                    isTestingAI.value = false;
+                    if (result && result.includes('OK')) {
+                        connectionStatus.success = true;
+                        connectionStatus.message = "Connection successful!";
+                    } else {
+                        connectionStatus.success = false;
+                        connectionStatus.message = "Connection failed. Check API Key.";
+                    }
+                };
+
+                const generateDescriptionAI = async (cat, desc) => {
+                    isGenerating.value = desc.id;
+                    const prompt = `Write a short description for the character's ${desc.name} (category: ${cat.name}). Name: ${character.name || 'Unknown'}. Background context: ${character.description || 'None'}`;
+                    const res = await callAI(prompt);
+                    if (res) desc.content = res;
+                    isGenerating.value = null;
+                };
+
+                const buildAIContext = () => {
+                    let ctx = `[Character Context]\nName: ${character.name || 'Unknown'}\n`;
+                    if (character.description) ctx += `Description:\n${character.description}\n`;
+                    if (character.extensions && character.extensions.categories) {
+                        character.extensions.categories.forEach(cat => {
+                            let details = [];
+                            cat.descriptors.forEach(desc => {
+                                if (desc.content) details.push(`${desc.name}: ${desc.content}`);
+                            });
+                            if (details.length > 0) ctx += `[${cat.name}]\n${details.join(' | ')}\n`;
+                        });
+                    }
+                    return ctx + '\n---\n';
+                };
+
+                const generatePromptAI = async (field) => {
+                    isGenerating.value = field;
+
+                    let prompt = buildAIContext() + `Write the ${field} for a roleplay character named ${character.name || 'Unknown'}. Make it creative and fit for a character card.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
+
+                    if (field === 'scenario') {
+                        prompt += `- Keep the output to exactly one paragraph.\n- Make it a generalized setting or background for the roleplay.\n`;
+                    } else if (field === 'mes_example') {
+                        prompt += `- Generate exactly 4 to 5 examples of dialogue.\n- Each example should have 3 to 4 dialogue exchanges between the user and the character.\n- You MUST start each new example block with the exact tag <START> on its own line.\n- Use the {{char}}: prefix to denote a character message.\n- Use the {{user}}: prefix to denote a user message.\n- The dialogue should accurately reflect the character's traits, lore, and physical descriptions provided in the context.\n- Describe how the character speaks and acts using asterisks for actions.\n- Spoken words MUST be enclosed in double quotes.\n`;
+                    }
+
+                    if (character[field] && character[field].trim()) {
+                        let expansionText = "(at least 2 to 3 paragraphs)";
+                        if (field === 'scenario') expansionText = "(exactly 1 paragraph)";
+                        if (field === 'mes_example') expansionText = "(following the formatting rules above)";
+                        prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version ${expansionText}: "${character[field]}"`;
+                    }
+
+                    const res = await callAI(prompt);
+                    if (res) character[field] = res;
+                    isGenerating.value = null;
+                };
+
+                const generateAltGreetingAI = async (index) => {
+                    isGenerating.value = 'alt_greeting_' + index;
+
+                    let prompt = buildAIContext() + `Write an alternate initial greeting message for a roleplay character named ${character.name || 'Unknown'}. Make it engaging.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
+
+                    if (character.alternate_greetings[index] && character.alternate_greetings[index].trim()) {
+                        prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version (at least 2 to 3 paragraphs): "${character.alternate_greetings[index]}"`;
+                    }
+
+                    const res = await callAI(prompt);
+                    if (res) character.alternate_greetings[index] = res;
+                    isGenerating.value = null;
+                };
+
+                const insertMacro = (event, obj, key, macro) => {
+                    const btn = event.currentTarget;
+                    const container = btn.closest('.node-body') || btn.parentElement.parentElement;
+                    const textarea = container.querySelector('textarea');
+                    if (textarea) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const text = obj[key] || '';
+                        obj[key] = text.substring(0, start) + macro + text.substring(end);
+
+                        nextTick(() => {
+                            textarea.focus();
+                            textarea.selectionStart = textarea.selectionEnd = start + macro.length;
+                        });
+                    } else {
+                        obj[key] = (obj[key] || '') + macro;
+                    }
+                };
+
+                const autoGenerateCharacter = async () => {
+                    if (!autoCharData.cardName.trim() || !autoCharData.firstName.trim()) {
+                        alert("Card Name and First Name are required fields.");
+                        return;
+                    }
+                    if (!confirm("This will overwrite your existing Character Descriptions. Proceed?")) return;
+
+                    isGenerating.value = 'autoCharacter';
+
+                    let characterContext = `Name: ${autoCharData.firstName}`;
+                    if (autoCharData.middleName) characterContext += ` ${autoCharData.middleName}`;
+                    if (autoCharData.lastName) characterContext += ` ${autoCharData.lastName}`;
+                    if (autoCharData.age) characterContext += `\nAge: ${autoCharData.age}`;
+                    if (autoCharData.sex) characterContext += `\nSex: ${autoCharData.sex}`;
+                    if (autoCharData.relationship) characterContext += `\nRelationship to {{user}}: ${autoCharData.relationship}`;
+                    if (autoCharData.prompt) characterContext += `\nAdditional Details: ${autoCharData.prompt}`;
+
+                    const specPrompt = `Based on the following character context, create a detailed character profile broken down into categories and descriptors. 
+                    Context:\n${characterContext}
+                    
+                    Return ONLY a JSON array of category objects. Each category must have a "name" string and a "descriptors" array. Each descriptor must have a "name" string and a detailed "content" string. 
+                    Do not use markdown blocks. Output raw JSON only.
+                    Format: [{"name": "Category 1", "descriptors": [{"name": "Descriptor 1", "content": "Value 1"}]}]`;
+
+                    const res = await callAI(specPrompt);
+
+                    if (res) {
+                        try {
+                            const cleanRes = res.replace(/^```json/g, '').replace(/```$/g, '').trim();
+                            const parsedCategories = JSON.parse(cleanRes);
+
+                            if (Array.isArray(parsedCategories)) {
+                                character.name = autoCharData.cardName.trim();
+                                character.extensions.categories = parsedCategories.map(cat => ({
+                                    id: 'cat_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000),
+                                    name: cat.name || 'Unnamed Category',
+                                    descriptors: (cat.descriptors || []).map(desc => ({
+                                        id: 'desc_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000),
+                                        name: desc.name || 'Unnamed Descriptor',
+                                        content: desc.content || ''
+                                    }))
+                                }));
+
+                                showAutoCharModal.value = false;
+                                alert("Character profile generated successfully!");
+                            } else {
+                                throw new Error("Format was not an array.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert("Failed to parse AI output. The model may have returned invalid JSON.");
+                        }
+                    }
+                    isGenerating.value = null;
+                };
+
+                return {
+                    activeTab, character, settings, showGallery, savedCharacters,
+                    showQuickActions, showRawOutput, rawOutputJSON, openRawOutput, copyRawOutput,
+                    showAutoCharModal, autoCharData, autoGenerateCharacter,
+                    library, librarySearch, filteredLibrary, imageUploadInput, themeUploadInput,
+                    savedThemes, currentThemeVars, applyTheme, debouncedApplyTheme,
+                    saveCustomTheme, deleteCustomTheme, exportTheme, importTheme,
+                    connectionStatus, isTestingAI, isGenerating,
+                    triggerImageUpload, handleImageUpload,
+                    addCategory, removeCategory, addDescriptor, removeDescriptor,
+                    addAltGreeting, removeAltGreeting, saveToIndexedDB, loadFromGallery,
+                    saveToLibrary, loadFromLibrary, deleteFromLibrary,
+                    downloadJSON, exportPNG, testAIConnection,
+                    generateDescriptionAI, generatePromptAI, generateAltGreetingAI,
+                    insertMacro,
+                    expandAll, collapseAll
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+
+</html>
