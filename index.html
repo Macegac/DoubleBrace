@@ -363,6 +363,10 @@
             padding: 0.5rem;
             border-radius: var(--border-radius);
             transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
 
         .gallery-item:hover {
@@ -374,7 +378,46 @@
             height: 80px;
             object-fit: cover;
             border-radius: var(--border-radius);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .gallery-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .gallery-actions {
+            opacity: 1;
+        }
+
+        .gallery-action-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .gallery-action-btn:hover {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-pink);
+            transform: scale(1.1);
+        }
+
+        .gallery-action-btn.danger:hover {
+            background: var(--danger);
+            border-color: var(--danger);
         }
 
         .gallery-item-placeholder {
@@ -1113,8 +1156,18 @@
                             <i class="fas fa-user"></i>
                         </div>
                         <div
-                            style="font-size:0.8rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            style="font-size:0.8rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
                             {{ char.name || 'Unnamed' }}
+                        </div>
+                        <div class="gallery-actions">
+                            <button class="gallery-action-btn" title="Duplicate Character"
+                                @click.stop="duplicateCharacter(char)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="gallery-action-btn danger" title="Delete Character"
+                                @click.stop="deleteCharacter(char.id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1536,6 +1589,25 @@
                         await reloadDBData();
                         alert("Character saved to Gallery!");
                     } catch (e) { alert("Failed to save."); }
+                };
+
+                const duplicateCharacter = async (charToCopy) => {
+                    const cloned = JSON.parse(JSON.stringify(charToCopy));
+                    cloned.id = Date.now().toString() + '_' + Math.floor(Math.random() * 1000);
+                    cloned.name = (cloned.name || 'Unnamed') + ' (Copy)';
+                    try {
+                        await dbPut(STORE_CHARS, cloned);
+                        await reloadDBData();
+                    } catch (e) { alert("Failed to duplicate character."); }
+                };
+
+                const deleteCharacter = async (id) => {
+                    if (confirm("Are you sure you want to delete this character permanently?")) {
+                        try {
+                            await dbDelete(STORE_CHARS, id);
+                            await reloadDBData();
+                        } catch (e) { alert("Failed to delete character."); }
+                    }
                 };
 
                 const loadFromGallery = (char) => {
@@ -2047,6 +2119,7 @@
                     triggerImageUpload, handleImageUpload,
                     addCategory, removeCategory, addDescriptor, removeDescriptor,
                     addAltGreeting, removeAltGreeting, saveToIndexedDB, loadFromGallery,
+                    duplicateCharacter, deleteCharacter,
                     saveToLibrary, loadFromLibrary, deleteFromLibrary,
                     downloadJSON, exportPNG, testAIConnection,
                     generateDescriptionAI, generatePromptAI, generateAltGreetingAI,
