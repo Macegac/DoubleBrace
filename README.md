@@ -4,6 +4,8 @@ Welcome to the **AI Character Card Creator**! 🎭 This tool is a powerful, resp
 
 Whether you're crafting a cyberpunk hacker, a fantasy knight, or a sci-fi captain, this tool provides everything you need—powered by an intuitive UI and AI generation! ✨
 
+TRY IT HERE: https://macegac.github.io/DoubleBrace/
+
 ---
 
 ## ✨ Features
