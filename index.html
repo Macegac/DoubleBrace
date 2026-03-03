@@ -684,6 +684,8 @@
                             class="fas fa-user-edit"></i></button>
                     <button class="icon-btn" :class="{'active': activeTab === 'prompts'}" @click="activeTab = 'prompts'"
                         title="Global Info"><i class="fas fa-globe"></i></button>
+                    <button class="icon-btn" :class="{'active': activeTab === 'lorebook'}"
+                        @click="activeTab = 'lorebook'" title="Lorebook"><i class="fas fa-book"></i></button>
                     <button class="icon-btn" :class="{'active': activeTab === 'library'}" @click="activeTab = 'library'"
                         title="Library"><i class="fas fa-clipboard-list"></i></button>
                     <button class="icon-btn" :class="{'active': activeTab === 'settings'}"
@@ -871,9 +873,62 @@
                 </accordion-node>
 
                 <accordion-node title="Tags" theme="purple">
-                    <textarea class="node-textarea" v-model="character.tags_input"
-                        placeholder="tag1, tag2, tag3..."></textarea>
+                    <input type="text" class="node-textarea" v-model="character.tags_input"
+                        placeholder="Comma separated tags (e.g. fantasy, male, original)">
                 </accordion-node>
+            </div>
+
+            <!-- Tab: Lorebook -->
+            <div v-if="activeTab === 'lorebook'" style="animation: fadeIn 0.3s;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 class="section-title" style="margin-bottom:0;">Lorebook</h2>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="node-btn" @click="expandAll" title="Expand All"><i
+                                class="fas fa-expand-arrows-alt"></i></button>
+                        <button class="node-btn" @click="collapseAll" title="Collapse All"><i
+                                class="fas fa-compress-arrows-alt"></i></button>
+                    </div>
+                </div>
+
+                <draggable v-model="character.character_book.entries" item-key="id" handle=".node-header"
+                    animation="200" ghost-class="node-ghost">
+                    <template #item="{ element: entry }">
+                        <accordion-node v-model:title="entry.name" theme="purple" can-edit can-remove
+                            @remove="removeLoreEntry(entry)" has-generator :is-generating="isGenerating === entry.id"
+                            @generate="generateLoreAI(entry)">
+
+                            <div style="margin-bottom: 0.5rem;">
+                                <input type="text" class="node-textarea mt-1" v-model="entry.keysStr"
+                                    placeholder="Keywords (Comma separated, e.g. Home, childhood, old times)"
+                                    style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; min-height: unset;">
+                            </div>
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button class="node-btn macro-btn"
+                                        @click="insertMacro($event, entry, 'content', '{{char}}')"
+                                        title="Insert char macro" v-text="'{{char}}'"></button>
+                                    <button class="node-btn macro-btn"
+                                        @click="insertMacro($event, entry, 'content', '{{user}}')"
+                                        title="Insert user macro" v-text="'{{user}}'"></button>
+                                </div>
+                                <div
+                                    style="display:flex; gap: 0.5rem; align-items:center; color: var(--text-muted); font-size: 0.85rem;">
+                                    Order <input type="number" v-model.number="entry.insertion_order"
+                                        style="width: 50px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: white; border-radius: 4px; padding: 0.2rem; text-align:center;">
+                                </div>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="entry.content" placeholder="..."
+                                style="min-height: 120px;"></textarea>
+                        </accordion-node>
+                    </template>
+                </draggable>
+
+                <div class="mt-1" style="display:flex; justify-content:center;">
+                    <button class="primary-btn" style="background:var(--surface-color); color:var(--text-main);"
+                        @click="addLoreEntry"><i class="fas fa-plus"></i> Add Lore Entry
+                    </button>
+                </div>
             </div>
 
             <!-- Tab: Library -->
@@ -977,6 +1032,60 @@
                 </div>
 
                 <div style="margin-top: 1rem;">
+                    <accordion-node title="Global Info Prompts" theme="purple">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">First Message</label>
+                                <button class="node-btn warning" @click="resetPrompt('first_mes')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.first_mes"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Alternate
+                                    Greetings</label>
+                                <button class="node-btn warning" @click="resetPrompt('alt_greeting')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.alt_greeting"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Scenario</label>
+                                <button class="node-btn warning" @click="resetPrompt('scenario')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.scenario"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Example
+                                    Dialogs</label>
+                                <button class="node-btn warning" @click="resetPrompt('mes_example')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.mes_example"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; min-height: 120px;"></textarea>
+                        </div>
+                        <div
+                            style="margin-bottom: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color)">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Lorebook Generation
+                                    Strategy</label>
+                                <button class="node-btn warning" @click="resetPrompt('lorebook')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.lorebook"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                    </accordion-node>
+                </div>
+
+                <div style="margin-top: 1rem;">
                     <accordion-node title="Theme Settings" theme="purple">
                         <div
                             style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
@@ -1028,8 +1137,15 @@
         <div v-if="showRawOutput" class="overlay" @click.self="showRawOutput = false">
             <div class="overlay-content" style="max-width: 800px; width: 95%;">
                 <div
-                    style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
-                    <h3 style="margin:0;">Raw JSON Output</h3>
+                    style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem; align-items:center;">
+                    <h3 style="margin:0; display:flex; align-items:center; gap:0.5rem;">Raw JSON Output
+                        <span v-if="rawOutputJSON"
+                            style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal; background: rgba(0,0,0,0.3); padding: 0.2rem 0.6rem; border-radius: 12px; border: 1px solid var(--border-color);"
+                            title="Approximate Token Count (1 token ≈ 4 chars)">
+                            <i class="fas fa-coins" style="color: var(--warning); margin-right: 0.25rem;"></i>~{{
+                            tokenCount.toLocaleString() }} Tokens
+                        </span>
+                    </h3>
                     <button class="icon-btn" style="width:24px;height:24px;" @click="showRawOutput = false"><i
                             class="fas fa-times"></i></button>
                 </div>
@@ -1353,11 +1469,20 @@
                     creator_notes: '',
                     tags_input: '',
                     alternate_greetings: [],
+                    character_book: { name: '', description: '', entries: [] },
                     extensions: {
                         categories: []
                     },
                     image: null
                 });
+
+                const defaultAIPrompts = {
+                    first_mes: "- Write the very first message the character sends to initiate the roleplay.",
+                    alt_greeting: "- Write an alternate initial greeting message to initiate the roleplay. Make it engaging.",
+                    scenario: "- Keep the output to exactly one paragraph.\n- Make it a generalized setting or background for the roleplay.",
+                    mes_example: "- Generate exactly 4 to 5 examples of dialogue.\n- Each example should have 3 to 4 dialogue exchanges between the user and the character.\n- You MUST start each new example block with the exact tag <START> on its own line.\n- Use the {{char}}: prefix to denote a character message.\n- Use the {{user}}: prefix to denote a user message.\n- The dialogue should accurately reflect the character's traits, lore, and physical descriptions provided in the context.\n- Describe how the character speaks and acts using asterisks for actions.\n- Spoken words MUST be enclosed in double quotes.",
+                    lorebook: "- Use the provided keywords to write a concise lore entry.\n- Make it descriptive and relevant to the character context."
+                };
 
                 const settings = reactive({
                     currentThemeId: 'defaultDark',
@@ -1368,8 +1493,15 @@
                     defaultAuthor: '',
                     experimental: {
                         autoCharacter: false
-                    }
+                    },
+                    customPrompts: { ...defaultAIPrompts }
                 });
+
+                const resetPrompt = (field) => {
+                    if (confirm("Reset this prompt instruction back to its default?")) {
+                        settings.customPrompts[field] = defaultAIPrompts[field];
+                    }
+                };
 
                 const library = ref([]);
                 const savedCharacters = ref([]);
@@ -1381,6 +1513,11 @@
                 const isGenerating = ref(null); // stores ID or field name being generated
 
                 // Computed
+                const tokenCount = computed(() => {
+                    if (!rawOutputJSON.value) return 0;
+                    return Math.ceil(rawOutputJSON.value.length / 4);
+                });
+
                 const filteredLibrary = computed(() => {
                     if (!librarySearch.value) return library.value;
                     const l = librarySearch.value.toLowerCase();
@@ -1554,6 +1691,19 @@
                             if (parsed.defaultAuthor === undefined) {
                                 parsed.defaultAuthor = '';
                             }
+                            if (!parsed.character_book) {
+                                parsed.character_book = { name: '', description: '', entries: [] };
+                            }
+                            if (!parsed.customPrompts) {
+                                parsed.customPrompts = { ...defaultAIPrompts };
+                            } else {
+                                // Ensure any new default keys exist if they were missing from old saves
+                                for (const key in defaultAIPrompts) {
+                                    if (parsed.customPrompts[key] === undefined) {
+                                        parsed.customPrompts[key] = defaultAIPrompts[key];
+                                    }
+                                }
+                            }
                             Object.assign(settings, parsed);
                         } catch (e) { }
                     }
@@ -1622,6 +1772,7 @@
                         creator_notes: '',
                         tags_input: '',
                         alternate_greetings: [],
+                        character_book: { name: '', description: '', entries: [] },
                         extensions: { categories: [] },
                         image: null
                     };
@@ -1651,6 +1802,22 @@
                 const removeDescriptor = (cat, desc) => {
                     const idx = cat.descriptors.indexOf(desc);
                     if (idx > -1) cat.descriptors.splice(idx, 1);
+                };
+
+                // Lorebook Node Management
+                const addLoreEntry = () => {
+                    character.character_book.entries.push({
+                        id: 'lore_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000),
+                        name: 'New Lore',
+                        keysStr: '',
+                        content: '',
+                        insertion_order: 50,
+                        constant: false
+                    });
+                };
+                const removeLoreEntry = (entry) => {
+                    const idx = character.character_book.entries.indexOf(entry);
+                    if (idx > -1) character.character_book.entries.splice(idx, 1);
                 };
 
                 // Global Prompts
@@ -1737,7 +1904,22 @@
                         system_prompt: "",
                         creator_notes: character.creator_notes || "",
                         alternate_greetings: [...character.alternate_greetings],
-                        character_book: null,
+                        character_book: character.character_book ? {
+                            name: character.character_book.name || "",
+                            description: character.character_book.description || "",
+                            entries: (character.character_book.entries || []).map(e => ({
+                                id: e.id || 0,
+                                keys: (e.keysStr || "").split(',').map(k => k.trim()).filter(Boolean),
+                                name: e.name || "Lore",
+                                content: e.content || "",
+                                extension: e.extension || false,
+                                enabled: e.enabled !== false,
+                                insertion_order: parseInt(e.insertion_order) || 50,
+                                case_sensitive: e.case_sensitive || false,
+                                constant: e.constant || false,
+                                priority: e.priority || 10
+                            }))
+                        } : null,
                         tags: tagsArray,
                         creator: character.creator || settings.defaultAuthor || "",
                         character_version: "main",
@@ -2001,10 +2183,8 @@
 
                     let prompt = buildAIContext() + `Write the ${field} for a roleplay character named ${character.name || 'Unknown'}. Make it creative and fit for a character card.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
 
-                    if (field === 'scenario') {
-                        prompt += `- Keep the output to exactly one paragraph.\n- Make it a generalized setting or background for the roleplay.\n`;
-                    } else if (field === 'mes_example') {
-                        prompt += `- Generate exactly 4 to 5 examples of dialogue.\n- Each example should have 3 to 4 dialogue exchanges between the user and the character.\n- You MUST start each new example block with the exact tag <START> on its own line.\n- Use the {{char}}: prefix to denote a character message.\n- Use the {{user}}: prefix to denote a user message.\n- The dialogue should accurately reflect the character's traits, lore, and physical descriptions provided in the context.\n- Describe how the character speaks and acts using asterisks for actions.\n- Spoken words MUST be enclosed in double quotes.\n`;
+                    if (settings.customPrompts[field]) {
+                        prompt += settings.customPrompts[field] + "\n";
                     }
 
                     if (character[field] && character[field].trim()) {
@@ -2024,12 +2204,34 @@
 
                     let prompt = buildAIContext() + `Write an alternate initial greeting message for a roleplay character named ${character.name || 'Unknown'}. Make it engaging.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
 
+                    if (settings.customPrompts.alt_greeting) {
+                        prompt += settings.customPrompts.alt_greeting + "\n";
+                    }
+
                     if (character.alternate_greetings[index] && character.alternate_greetings[index].trim()) {
                         prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version (at least 2 to 3 paragraphs): "${character.alternate_greetings[index]}"`;
                     }
 
                     const res = await callAI(prompt);
                     if (res) character.alternate_greetings[index] = res;
+                    isGenerating.value = null;
+                };
+
+                const generateLoreAI = async (entry) => {
+                    isGenerating.value = entry.id;
+
+                    let prompt = buildAIContext() + `Write a lorebook entry for a roleplay character named ${character.name || 'Unknown'}. The entry should focus on the following keywords or theme: "${entry.keysStr || entry.name}".\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character.\n- You MUST use the exact string {{user}} to refer to the user.\n`;
+
+                    if (settings.customPrompts.lorebook) {
+                        prompt += settings.customPrompts.lorebook + "\n";
+                    }
+
+                    if (entry.content && entry.content.trim()) {
+                        prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version: "${entry.content}"`;
+                    }
+
+                    const res = await callAI(prompt);
+                    if (res) entry.content = res;
                     isGenerating.value = null;
                 };
 
@@ -2110,7 +2312,7 @@
 
                 return {
                     activeTab, character, settings, showGallery, savedCharacters,
-                    showQuickActions, showRawOutput, rawOutputJSON, openRawOutput, copyRawOutput,
+                    showQuickActions, showRawOutput, rawOutputJSON, tokenCount, openRawOutput, copyRawOutput,
                     showAutoCharModal, autoCharData, autoGenerateCharacter,
                     library, librarySearch, filteredLibrary, imageUploadInput, themeUploadInput,
                     savedThemes, currentThemeVars, applyTheme, debouncedApplyTheme,
@@ -2118,11 +2320,12 @@
                     connectionStatus, isTestingAI, isGenerating,
                     triggerImageUpload, handleImageUpload,
                     addCategory, removeCategory, addDescriptor, removeDescriptor,
+                    addLoreEntry, removeLoreEntry,
                     addAltGreeting, removeAltGreeting, saveToIndexedDB, loadFromGallery,
                     duplicateCharacter, deleteCharacter,
                     saveToLibrary, loadFromLibrary, deleteFromLibrary,
                     downloadJSON, exportPNG, testAIConnection,
-                    generateDescriptionAI, generatePromptAI, generateAltGreetingAI,
+                    generateDescriptionAI, generatePromptAI, generateAltGreetingAI, generateLoreAI, resetPrompt,
                     insertMacro,
                     expandAll, collapseAll
                 }

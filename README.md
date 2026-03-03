@@ -10,14 +10,17 @@ TRY IT HERE: https://macegac.github.io/DoubleBrace/
 
 ## ✨ Features
 
-### 🎨 Stunning Neon Glassmorphism UI
-- Dive into the default **Dark Nebula** theme, featuring glowing accents, frosted glass effects, and a responsive layout that looks great on both desktop and mobile! 📱💻
-- **Custom Themes:** Tweak CSS variables on the fly, save your custom themes, and even export/import them to share with others! 🌈
+
 
 ### 🗂️ Advanced Node-Based Descriptions
 - Organize character traits, physical features, and lore using a highly visual accordion node system. 🧩
 - Group descriptors into **Categories** for clean, manageable character structures.
 - Easily add, rename, or remove nodes with a click!
+
+### 📖 Integrated Lorebooks
+- Build deep, context-aware backgrounds using the native Lorebook builder. 📜
+- Link entries to **Keywords** which cleanly export as standard string arrays.
+- Includes insertion order controls and `{{char}}` / `{{user}}` macro tools for AI perfection.
 
 ### 🌍 Global Info & V2 Compatibility
 - Fill out standard V2 fields: **First Message, Alternate Greetings, Scenario, Example Dialogs, Creator Notes, and Tags**. 📝
@@ -36,6 +39,10 @@ TRY IT HERE: https://macegac.github.io/DoubleBrace/
 - Created a really good personality trait or visual description? Save it to your local **Library**! 📖
 - Reuse your saved categories and descriptors across different characters with a single click.
 - Everything is saved locally to your browser via IndexedDB for privacy and speed! 🔒
+
+### 🎨 Stunning Neon Glassmorphism UI
+- Dive into the default **Dark Nebula** theme, featuring glowing accents, frosted glass effects, and a responsive layout that looks great on both desktop and mobile! 📱💻
+- **Custom Themes:** Tweak CSS variables on the fly, save your custom themes, and even export/import them to share with others! 🌈
 
 ### 💾 Save, Load & Export
 - **Local Gallery:** Quick-save your characters to the built-in IndexedDB gallery and load them up anytime. 🖼️
