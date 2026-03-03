@@ -732,14 +732,15 @@
                 </div>
 
                 <draggable v-model="character.extensions.categories" item-key="id" handle=".node-header" animation="200"
-                    ghost-class="node-ghost">
+                    ghost-class="node-ghost" :delay="200" :delay-on-touch-only="true">
                     <template #item="{ element: cat }">
                         <accordion-node v-model:title="cat.name" theme="purple" can-edit can-remove has-save has-add
                             @remove="removeCategory(cat)" @add="addDescriptor(cat)"
                             @save="saveToLibrary(cat, 'category')">
 
                             <draggable class="node-children" v-model="cat.descriptors" item-key="id" group="descriptors"
-                                handle=".node-header" animation="200" ghost-class="node-ghost">
+                                handle=".node-header" animation="200" ghost-class="node-ghost" :delay="200"
+                                :delay-on-touch-only="true">
                                 <template #item="{ element: desc }">
                                     <accordion-node v-model:title="desc.name" theme="pink" can-edit can-remove has-save
                                         @remove="removeDescriptor(cat, desc)" @save="saveToLibrary(desc, 'descriptor')"
@@ -891,7 +892,7 @@
                 </div>
 
                 <draggable v-model="character.character_book.entries" item-key="id" handle=".node-header"
-                    animation="200" ghost-class="node-ghost">
+                    animation="200" ghost-class="node-ghost" :delay="200" :delay-on-touch-only="true">
                     <template #item="{ element: entry }">
                         <accordion-node v-model:title="entry.name" theme="purple" can-edit can-remove
                             @remove="removeLoreEntry(entry)" has-generator :is-generating="isGenerating === entry.id"
