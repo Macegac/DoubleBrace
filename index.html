@@ -687,6 +687,10 @@
                     <button class="icon-btn" :class="{'active': activeTab === 'lorebook'}"
                         @click="activeTab = 'lorebook'" title="Lorebook"><i class="fas fa-book"></i></button>
 
+                    <button class="icon-btn" :class="{'active': activeTab === 'chitchat'}"
+                        @click="activeTab = 'chitchat'" title="Test Interaction"><i
+                            class="fas fa-comment-dots"></i></button>
+
                     <button class="icon-btn" :class="{'active': activeTab === 'settings'}"
                         @click="activeTab = 'settings'" title="Settings"><i class="fas fa-cog"></i></button>
                 </div>
@@ -934,7 +938,63 @@
                 </div>
             </div>
 
+            <!-- Tab: ChitChat -->
+            <div v-if="activeTab === 'chitchat'"
+                style="animation: fadeIn 0.3s; display: flex; flex-direction: column; height: calc(100vh - 120px);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 class="section-title" style="margin-bottom:0;">ChitChat Testing</h2>
+                    <button class="node-btn danger" @click="chatLog = []" title="Clear Chat"><i
+                            class="fas fa-trash"></i> Clear</button>
+                </div>
 
+                <div class="node-container node-theme-purple"
+                    style="flex: 1; display:flex; flex-direction:column; overflow: hidden;">
+                    <!-- Chat History -->
+                    <div
+                        style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div v-if="chatLog.length === 0"
+                            style="text-align:center; color: var(--text-muted); margin-top: 2rem;">
+                            Say hello to start chatting with your character!<br>
+                            <span style="font-size:0.85rem;">Make sure you have an AI Provider configured in
+                                Settings.</span>
+                        </div>
+
+                        <div v-for="(msg, index) in chatLog" :key="index"
+                            style="display:flex; flex-direction:column; max-width: 85%;"
+                            :style="{'align-self': msg.role === 'user' ? 'flex-end' : 'flex-start'}">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;"
+                                :style="{'text-align': msg.role === 'user' ? 'right' : 'left'}">
+                                {{ msg.role === 'user' ? 'You' : (character.name || 'Character') }}
+                            </span>
+                            <div style="padding: 0.75rem 1rem; border-radius: 12px; line-height: 1.4; color: white; word-wrap: break-word; white-space: pre-wrap;"
+                                :style="{
+                                'background': msg.role === 'user' ? 'var(--accent-purple)' : 'rgba(255,255,255,0.08)',
+                                'border': msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
+                                'border-bottom-right-radius': msg.role === 'user' ? '2px' : '12px',
+                                'border-bottom-left-radius': msg.role === 'char' ? '2px' : '12px'
+                            }">{{ msg.content }}</div>
+                        </div>
+
+                        <div v-if="isChatGenerating"
+                            style="align-self: flex-start; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+                            <i class="fas fa-circle-notch fa-spin"></i> Typing...
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div
+                        style="padding: 1rem; border-top: 1px solid var(--border-color); display:flex; gap: 0.5rem; background: rgba(0,0,0,0.2);">
+                        <textarea class="form-control" v-model="chatInput" placeholder="Type a message..."
+                            style="height: 48px; min-height: 48px; resize: none; flex: 1; overflow:hidden;"
+                            @keyup.enter.exact="sendChatMessage"></textarea>
+                        <button class="primary-btn"
+                            style="height: 48px; width: 48px; padding: 0; display:flex; justify-content:center; align-items:center;"
+                            @click="sendChatMessage" :disabled="isChatGenerating || !chatInput.trim()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Tab: Settings -->
             <div v-if="activeTab === 'settings'" style="animation: fadeIn 0.3s;">
@@ -1511,6 +1571,10 @@
                     prompt: ''
                 });
                 const themeUploadInput = ref(null);
+
+                const chatLog = ref([]);
+                const chatInput = ref('');
+                const isChatGenerating = ref(false);
 
                 // State Data
                 const character = reactive({
@@ -2413,12 +2477,54 @@
                     isGenerating.value = null;
                 };
 
+                const sendChatMessage = async () => {
+                    if (!chatInput.value.trim() || isChatGenerating.value) return;
+
+                    const userMessage = chatInput.value.trim();
+                    chatLog.value.push({ role: 'user', content: userMessage });
+                    chatInput.value = '';
+                    isChatGenerating.value = true;
+
+                    // Simple chat context building
+                    let contextStr = buildAIContext();
+
+                    // Add previous chat history
+                    const historyTail = chatLog.value.slice(-6); // Keep last few messages
+                    historyTail.forEach(msg => {
+                        if (msg.role === 'user') {
+                            contextStr += `\n{{user}}: ${msg.content}`;
+                        } else if (msg.role === 'char') {
+                            contextStr += `\n{{char}}: ${msg.content}`;
+                        }
+                    });
+
+                    let prompt = contextStr + `\n\nWrite the next response for ${character.name || 'the character'}. Reply IN CHARACTER. The user just said:\n"${userMessage}"\n\nCRITICAL INSTRUCTIONS:\n- Keep your response in character.\n- Describe actions using asterisks.\n- Enclose spoken words in quotes.\n- Do NOT prefix your response with {{char}}: or your name. Just write the response.\n`;
+
+                    const res = await callAI(prompt);
+                    if (res) {
+                        // Strip leading {{char}}: if AI included it anyway
+                        let cleanRes = res.replace(/^\{\{char\}\}:\s*/gi, '').replace(new RegExp(`^${character.name}:\s*`, 'gi'), '').trim();
+                        chatLog.value.push({ role: 'char', content: cleanRes });
+                    } else {
+                        chatLog.value.push({ role: 'system', content: 'Connection failed or error generating response.' });
+                    }
+
+                    isChatGenerating.value = false;
+
+                    // Scroll to bottom (wait for DOM update)
+                    nextTick(() => {
+                        const chatContainer = document.querySelector('.node-container > div[style*="overflow-y"]');
+                        if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                    });
+                };
+
                 return {
                     activeTab, character, settings, showGallery, savedCharacters, showLibraryModal,
                     showRestoreModal, confirmRestore, cancelRestore,
                     showQuickActions, showRawOutput, rawOutputJSON, tokenCount, openRawOutput, copyRawOutput,
                     showAutoCharModal, autoCharData, autoGenerateCharacter,
                     library, librarySearch, filteredLibrary, imageUploadInput, themeUploadInput,
+                    chatLog, chatInput, isChatGenerating,
                     savedThemes, currentThemeVars, applyTheme, debouncedApplyTheme,
                     saveCustomTheme, deleteCustomTheme, exportTheme, importTheme,
                     connectionStatus, isTestingAI, isGenerating,
@@ -2428,7 +2534,7 @@
                     addAltGreeting, removeAltGreeting, saveToIndexedDB, loadFromGallery,
                     duplicateCharacter, deleteCharacter,
                     saveToLibrary, loadFromLibrary, deleteFromLibrary,
-                    downloadJSON, exportPNG, testAIConnection,
+                    downloadJSON, exportPNG, testAIConnection, sendChatMessage,
                     generateDescriptionAI, generatePromptAI, generateAltGreetingAI, generateLoreAI, resetPrompt,
                     insertMacro,
                     expandAll, collapseAll
