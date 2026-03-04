@@ -677,8 +677,9 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button v-if="settings.experimental.autoCharacter" class="icon-btn" style="color: var(--warning);"
-                        @click="showAutoCharModal = true" title="Auto Character"><i class="fas fa-bolt"></i></button>
+                    <button v-if="settings.experimental.autoCharacter && settings.aiEnabled" class="icon-btn"
+                        style="color: var(--warning);" @click="showAutoCharModal = true" title="Auto Character"><i
+                            class="fas fa-bolt"></i></button>
                     <button class="icon-btn" :class="{'active': activeTab === 'descriptions'}"
                         @click="activeTab = 'descriptions'" title="Descriptions"><i
                             class="fas fa-user-edit"></i></button>
@@ -687,7 +688,7 @@
                     <button class="icon-btn" :class="{'active': activeTab === 'lorebook'}"
                         @click="activeTab = 'lorebook'" title="Lorebook"><i class="fas fa-book"></i></button>
 
-                    <button class="icon-btn" :class="{'active': activeTab === 'chitchat'}"
+                    <button v-if="settings.aiEnabled" class="icon-btn" :class="{'active': activeTab === 'chitchat'}"
                         @click="activeTab = 'chitchat'" title="Test Interaction"><i
                             class="fas fa-comment-dots"></i></button>
 
@@ -1038,7 +1039,8 @@
                     </div>
                 </div>
 
-                <div class="node-container node-theme-purple" style="padding: 1rem; margin-top: 1rem;">
+                <div v-if="settings.aiEnabled" class="node-container node-theme-purple"
+                    style="padding: 1rem; margin-top: 1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <label style="color:white; font-weight:500;"><i class="fas fa-flask"
                                 style="color:var(--warning); margin-right:0.5rem;"></i>Experimental Features</label>
@@ -1425,7 +1427,7 @@
             </div>
             <div v-show="isOpen" class="node-body">
                 <slot></slot>
-                <div v-if="hasGenerator" class="flex justify-end mt-1">
+                <div v-if="hasGenerator && globalSettings && globalSettings.aiEnabled" class="flex justify-end mt-1">
                     <button class="node-btn warning" @click="$emit('generate')" title="Generate with AI">
                         <i class="fas fa-bolt" :class="{ 'fa-spin': isGenerating }"></i>
                     </button>
@@ -1531,10 +1533,12 @@
                 const expandTrigger = inject('expandTrigger', ref(0));
                 const collapseTrigger = inject('collapseTrigger', ref(0));
 
+                const globalSettings = inject('globalSettings', { aiEnabled: true });
+
                 watch(expandTrigger, () => isOpen.value = true);
                 watch(collapseTrigger, () => isOpen.value = false);
 
-                return { isOpen, isEditing, editedTitle, titleInput, startEdit, finishEdit };
+                return { isOpen, isEditing, editedTitle, titleInput, startEdit, finishEdit, globalSettings };
             }
         };
 
