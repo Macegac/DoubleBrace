@@ -3,7 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DoubleBrace">
+    <link rel="manifest"
+        href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkRvdWJsZUJyYWNlIC0gQ2hhcmFjdGVyIENhcmQgU3R1ZGlvIiwKICAic2hvcnRfbmFtZSI6ICJEb3VibGVCcmFjZSIsCiAgImRlc2NyaXB0aW9uIjogIkxhYm9yYXRvcnkgZm9yIEFJIFJvbGVwbGF5IENoYXJhY3RlcnMiLAogICJzdGFydF91cmwiOiAiLi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwODAzMGYiLAogICJ0aGVtZV9jb2xvciIjogIiMwODAzMGYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2dpdGh1Yi5jb20vTWFjZWdhYy9Eb3VibGVCcmFjZS9ibG9iL21haW4vTG9nby5wbmc/cmF3PXRydWUiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
     <title>DoubleBrace - Character Card Studio</title>
     <link rel="apple-touch-icon" href="https://github.com/Macegac/DoubleBrace/blob/main/Logo.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/Macegac/DoubleBrace/blob/main/Logo.png?raw=true">
@@ -2596,6 +2603,18 @@
         });
 
         app.mount('#app');
+
+        // PWA Service Worker Registration (Required for Android "Add to Home Screen" prompt)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = "self.addEventListener('fetch', function(e) {});";
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => {
+                    console.log('SW registration failed: ', err);
+                });
+            });
+        }
     </script>
 </body>
 
