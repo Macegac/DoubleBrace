@@ -621,6 +621,11 @@
             }
         }
 
+        @keyframes parseProgress {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(150%); }
+        }
+
         /* Mobile Layout */
         @media (max-width: 600px) {
             header {
@@ -706,6 +711,8 @@
                 </div>
                 <input type="file" ref="imageUploadInput" style="display:none"
                     accept="image/png, image/jpeg, image/webp" @change="handleImageUpload">
+                <input type="file" ref="pngImportInput" style="display:none" accept="image/png" @change="handlePNGImport">
+                <input type="file" ref="jsonImportInput" style="display:none" accept=".json" @change="handleJSONImport">
             </header>
 
             <!-- Quick Actions Bar -->
@@ -725,6 +732,22 @@
                 <button class="action-item" @click="exportPNG">
                     <i class="fas fa-magic"></i>
                     <span>Generate PNG</span>
+                </button>
+                <button class="action-item" @click="triggerPNGImport">
+                    <i class="fas fa-file-import"></i>
+                    <span>Import PNG</span>
+                </button>
+                <button class="action-item" @click="triggerJSONImport">
+                    <i class="fas fa-file-code"></i>
+                    <span>Import JSON</span>
+                </button>
+                <button class="action-item" @click="undo" :style="{opacity: undoStack.length === 0 ? 0.35 : 1}" :disabled="undoStack.length === 0" title="Undo (Ctrl+Z)">
+                    <i class="fas fa-undo"></i>
+                    <span>Undo</span>
+                </button>
+                <button class="action-item" @click="redo" :style="{opacity: redoStack.length === 0 ? 0.35 : 1}" :disabled="redoStack.length === 0" title="Redo (Ctrl+Y)">
+                    <i class="fas fa-redo"></i>
+                    <span>Redo</span>
                 </button>
             </div>
         </div>
@@ -815,13 +838,12 @@
 
                 <accordion-node title="First Message" theme="purple" has-generator
                     :is-generating="isGenerating === 'first_mes'" @generate="generatePromptAI('first_mes')">
-                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'first_mes', '{{char}}')" title="Insert char macro"
-                            v-text="'{{char}}'"></button>
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'first_mes', '{{user}}')" title="Insert user macro"
-                            v-text="'{{user}}'"></button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'first_mes', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'first_mes', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <span :style="{fontSize:'0.75rem', color: countTokens(character.first_mes)>=1000?'var(--danger)':countTokens(character.first_mes)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.first_mes) }} tokens</span>
                     </div>
                     <textarea class="node-textarea" v-model="character.first_mes"
                         placeholder="The very first message the character sends..."></textarea>
@@ -858,13 +880,12 @@
 
                 <accordion-node title="Scenario" theme="purple" has-generator
                     :is-generating="isGenerating === 'scenario'" @generate="generatePromptAI('scenario')">
-                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'scenario', '{{char}}')" title="Insert char macro"
-                            v-text="'{{char}}'"></button>
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'scenario', '{{user}}')" title="Insert user macro"
-                            v-text="'{{user}}'"></button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'scenario', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'scenario', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <span :style="{fontSize:'0.75rem', color: countTokens(character.scenario)>=1000?'var(--danger)':countTokens(character.scenario)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.scenario) }} tokens</span>
                     </div>
                     <textarea class="node-textarea" v-model="character.scenario"
                         placeholder="The setting or scenario..."></textarea>
@@ -872,16 +893,45 @@
 
                 <accordion-node title="Example Dialogs" theme="purple" has-generator
                     :is-generating="isGenerating === 'mes_example'" @generate="generatePromptAI('mes_example')">
-                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'mes_example', '{{char}}')" title="Insert char macro"
-                            v-text="'{{char}}'"></button>
-                        <button class="node-btn macro-btn"
-                            @click="insertMacro($event, character, 'mes_example', '{{user}}')" title="Insert user macro"
-                            v-text="'{{user}}'"></button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'mes_example', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'mes_example', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <span :style="{fontSize:'0.75rem', color: countTokens(character.mes_example)>=1000?'var(--danger)':countTokens(character.mes_example)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.mes_example) }} tokens</span>
                     </div>
                     <textarea class="node-textarea" v-model="character.mes_example"
                         placeholder="{{user}}: Hello!&#10;{{char}}: General Kenobi!"></textarea>
+                </accordion-node>
+
+                <accordion-node title="Personality Summary" theme="purple">
+                    <textarea class="node-textarea" v-model="character.personality"
+                        placeholder="A brief personality summary (plain text)..."></textarea>
+                </accordion-node>
+
+                <accordion-node title="System Prompt" theme="purple" has-generator
+                    :is-generating="isGenerating === 'system_prompt'" @generate="generatePromptAI('system_prompt')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'system_prompt', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'system_prompt', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <span :style="{fontSize:'0.75rem', color: countTokens(character.system_prompt)>=1000?'var(--danger)':countTokens(character.system_prompt)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.system_prompt) }} tokens</span>
+                    </div>
+                    <textarea class="node-textarea" v-model="character.system_prompt"
+                        placeholder="System-level instructions injected before the conversation..."></textarea>
+                </accordion-node>
+
+                <accordion-node title="Post History Instructions" theme="purple">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'post_history_instructions', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, character, 'post_history_instructions', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <span :style="{fontSize:'0.75rem', color: countTokens(character.post_history_instructions)>=1000?'var(--danger)':countTokens(character.post_history_instructions)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.post_history_instructions) }} tokens</span>
+                    </div>
+                    <textarea class="node-textarea" v-model="character.post_history_instructions"
+                        placeholder="Instructions injected after chat history (jailbreak position)..."></textarea>
                 </accordion-node>
 
                 <accordion-node title="Creator Notes" theme="purple">
@@ -892,6 +942,12 @@
                 <accordion-node title="Tags" theme="purple">
                     <input type="text" class="node-textarea" v-model="character.tags_input"
                         placeholder="Comma separated tags (e.g. fantasy, male, original)">
+                    <div style="margin-top:0.5rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Character Version</label>
+                        <input type="text" class="node-textarea" v-model="character.character_version"
+                            placeholder="e.g. main, 1.0, v2"
+                            style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; min-height:unset;">
+                    </div>
                 </accordion-node>
             </div>
 
@@ -907,39 +963,68 @@
                     </div>
                 </div>
 
-                <draggable v-model="character.character_book.entries" item-key="id" handle=".node-header"
+                <input type="text" v-model="lorebookSearch" class="form-control mb-1"
+                    placeholder="Search entries by name, key, or content..." style="margin-bottom:0.75rem;">
+
+                <draggable v-if="!lorebookSearch" v-model="character.character_book.entries" item-key="id" handle=".node-header"
                     animation="200" ghost-class="node-ghost" :delay="200" :delay-on-touch-only="true">
                     <template #item="{ element: entry }">
                         <accordion-node v-model:title="entry.name" theme="purple" can-edit can-remove
                             @remove="removeLoreEntry(entry)" has-generator :is-generating="isGenerating === entry.id"
                             @generate="generateLoreAI(entry)">
-
                             <div style="margin-bottom: 0.5rem;">
                                 <input type="text" class="node-textarea mt-1" v-model="entry.keysStr"
-                                    placeholder="Keywords (Comma separated, e.g. Home, childhood, old times)"
+                                    placeholder="Keywords (comma separated)"
                                     style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; min-height: unset;">
                             </div>
-                            <div
-                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
                                 <div style="display:flex; gap:0.5rem;">
-                                    <button class="node-btn macro-btn"
-                                        @click="insertMacro($event, entry, 'content', '{{char}}')"
-                                        title="Insert char macro" v-text="'{{char}}'"></button>
-                                    <button class="node-btn macro-btn"
-                                        @click="insertMacro($event, entry, 'content', '{{user}}')"
-                                        title="Insert user macro" v-text="'{{user}}'"></button>
+                                    <button class="node-btn macro-btn" @click="insertMacro($event, entry, 'content', '{{char}}')" v-text="'{{char}}'"></button>
+                                    <button class="node-btn macro-btn" @click="insertMacro($event, entry, 'content', '{{user}}')" v-text="'{{user}}'"></button>
                                 </div>
-                                <div
-                                    style="display:flex; gap: 0.5rem; align-items:center; color: var(--text-muted); font-size: 0.85rem;">
-                                    Order <input type="number" v-model.number="entry.insertion_order"
-                                        style="width: 50px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: white; border-radius: 4px; padding: 0.2rem; text-align:center;">
+                                <div style="display:flex; gap:0.5rem; align-items:center; color:var(--text-muted); font-size:0.8rem;">
+                                    Order <input type="number" v-model.number="entry.insertion_order" style="width:45px; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); color:white; border-radius:4px; padding:0.2rem; text-align:center;">
                                 </div>
                             </div>
-                            <textarea class="node-textarea mt-1" v-model="entry.content" placeholder="..."
-                                style="min-height: 120px;"></textarea>
+                            <textarea class="node-textarea mt-1" v-model="entry.content" placeholder="..." style="min-height: 120px;"></textarea>
+                            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.1); font-size:0.8rem; color:var(--text-muted);">
+                                <label>Position:
+                                    <select v-model="entry.position" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; padding:0.15rem 0.3rem; margin-left:0.25rem; font-size:0.8rem;">
+                                        <option value="before_char">Before Char</option>
+                                        <option value="after_char">After Char</option>
+                                        <option value="before_an">Before AN</option>
+                                        <option value="after_an">After AN</option>
+                                    </select>
+                                </label>
+                                <label>Depth: <input type="number" v-model.number="entry.depth" min="0" max="100" style="width:42px; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); color:white; border-radius:4px; padding:0.15rem; text-align:center; margin-left:0.25rem;"></label>
+                                <label style="display:flex; align-items:center; gap:0.25rem;"><input type="checkbox" v-model="entry.use_regex"> Regex</label>
+                                <label style="display:flex; align-items:center; gap:0.25rem;"><input type="checkbox" v-model="entry.enabled"> Enabled</label>
+                                <label style="display:flex; align-items:center; gap:0.25rem;"><input type="checkbox" v-model="entry.constant"> Constant</label>
+                            </div>
                         </accordion-node>
                     </template>
                 </draggable>
+
+                <div v-else>
+                    <accordion-node v-for="entry in filteredLoreEntries" :key="entry.id" v-model:title="entry.name" theme="purple" can-edit can-remove
+                        @remove="removeLoreEntry(entry)" has-generator :is-generating="isGenerating === entry.id"
+                        @generate="generateLoreAI(entry)">
+                        <div style="margin-bottom: 0.5rem;">
+                            <input type="text" class="node-textarea mt-1" v-model="entry.keysStr"
+                                placeholder="Keywords (comma separated)"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; min-height: unset;">
+                        </div>
+                        <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                            <button class="node-btn macro-btn" @click="insertMacro($event, entry, 'content', '{{char}}')" v-text="'{{char}}'"></button>
+                            <button class="node-btn macro-btn" @click="insertMacro($event, entry, 'content', '{{user}}')" v-text="'{{user}}'"></button>
+                        </div>
+                        <textarea class="node-textarea mt-1" v-model="entry.content" placeholder="..." style="min-height: 120px;"></textarea>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.1); font-size:0.8rem; color:var(--text-muted);">
+                            <label style="display:flex; align-items:center; gap:0.25rem;"><input type="checkbox" v-model="entry.enabled"> Enabled</label>
+                            <label style="display:flex; align-items:center; gap:0.25rem;"><input type="checkbox" v-model="entry.constant"> Constant</label>
+                        </div>
+                    </accordion-node>
+                </div>
 
                 <div class="mt-1" style="display:flex; justify-content:center;">
                     <button class="primary-btn" style="background:var(--surface-color); color:var(--text-main);"
@@ -953,14 +1038,19 @@
                 style="animation: fadeIn 0.3s; display: flex; flex-direction: column; height: calc(100vh - 120px);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                     <h2 class="section-title" style="margin-bottom:0;">ChitChat Testing</h2>
-                    <button class="node-btn danger" @click="chatLog = []" title="Clear Chat"><i
-                            class="fas fa-trash"></i> Clear</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="node-btn warning" @click="regenerateLastResponse"
+                            v-if="chatLog.length > 0 && chatLog[chatLog.length-1].role === 'char' && !isChatGenerating"
+                            title="Regenerate last response"><i class="fas fa-redo"></i> Regen</button>
+                        <button class="node-btn danger" @click="chatLog = []" title="Clear Chat"><i
+                                class="fas fa-trash"></i> Clear</button>
+                    </div>
                 </div>
 
                 <div class="node-container node-theme-purple"
                     style="flex: 1; display:flex; flex-direction:column; overflow: hidden;">
                     <!-- Chat History -->
-                    <div
+                    <div class="chat-scroll-area"
                         style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div v-if="chatLog.length === 0" style="text-align:center; color: #ffffff; margin-top: 2rem;">
                             Say hello to start chatting with your character!<br>
@@ -1230,6 +1320,53 @@
             </div>
         </div>
 
+        <!-- Description Import Modal -->
+        <div v-if="showDescParseModal" class="overlay" @click.self="isGenerating !== 'descParse' && applyDescriptionAsDummy()">
+            <div class="overlay-content" style="max-width: 480px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;"><i class="fas fa-file-import" style="color:var(--accent); margin-right:0.5rem;"></i>Import Description</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" :disabled="isGenerating === 'descParse'" @click="applyDescriptionAsDummy"><i class="fas fa-times"></i></button>
+                </div>
+
+                <!-- Loading state -->
+                <div v-if="isGenerating === 'descParse'" style="padding: 1rem 0 0.5rem;">
+                    <p style="color:var(--text-secondary); margin-bottom:1.5rem; text-align:center;">Parsing description with AI&hellip;</p>
+                    <div style="position:relative; margin: 0 0.5rem 0.4rem;">
+                        <!-- Track -->
+                        <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden;">
+                            <div :style="{width: parseProgressPct + '%'}" style="height:100%; background:var(--warning); border-radius:999px; transition: width 0.25s ease;"></div>
+                        </div>
+                        <!-- Bolt riding the leading edge -->
+                        <i class="fas fa-bolt fa-spin"
+                            :style="{left: 'calc(' + parseProgressPct + '% - 8px)'}"
+                            style="position:absolute; top:-5px; color:var(--warning); font-size:1rem; transition: left 0.25s ease; filter:drop-shadow(0 0 5px var(--warning)); pointer-events:none;"></i>
+                    </div>
+                    <div style="text-align:right; color:var(--warning); font-size:0.85rem; font-weight:600; margin-right:0.5rem;">{{ parseProgressPct }}%</div>
+                </div>
+
+                <!-- Choice state -->
+                <template v-else>
+                    <p style="color:var(--text-secondary); margin-bottom:1rem;">This card has a description field but no category/descriptor structure. How would you like to import it?</p>
+                    <div style="background:rgba(255,193,7,0.08); border:1px solid var(--warning); border-radius:6px; padding:0.75rem; margin-bottom:1.25rem;">
+                        <p style="color:var(--warning); margin:0; font-size:0.85rem;"><i class="fas fa-exclamation-triangle" style="margin-right:0.5rem;"></i><strong>Note:</strong> Parsing with AI will reorganize the description into categories and descriptors. The original text is preserved.</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <button class="primary-btn" @click="applyDescriptionAsDummy" style="display:flex; align-items:center; gap:0.75rem;">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Keep as Single Block</span>
+                            <span style="font-size:0.8rem; opacity:0.6; margin-left:auto;">One category, one descriptor</span>
+                        </button>
+                        <button class="primary-btn" @click="parseDescriptionWithAI"
+                            style="display:flex; align-items:center; gap:0.75rem; background:var(--warning); color:#000;">
+                            <i class="fas fa-bolt"></i>
+                            <span>Parse with AI</span>
+                            <span style="font-size:0.8rem; opacity:0.6; margin-left:auto;">Split into categories &amp; descriptors</span>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Auto Character Overlay -->
         <div v-if="showAutoCharModal" class="overlay" @click.self="showAutoCharModal = false">
             <div class="overlay-content" style="max-width: 600px;">
@@ -1406,12 +1543,15 @@
                             class="fas fa-times"></i></button>
                 </div>
 
-                <div v-if="savedCharacters.length === 0" class="text-center text-muted">
-                    No characters saved yet.
+                <input type="text" v-model="gallerySearch" class="form-control"
+                    placeholder="Search by name, tag, or creator..." style="margin-bottom:0.75rem;" @click.stop>
+
+                <div v-if="filteredCharacters.length === 0" class="text-center text-muted">
+                    {{ savedCharacters.length === 0 ? 'No characters saved yet.' : 'No matches found.' }}
                 </div>
 
                 <div class="gallery-grid">
-                    <div v-for="char in savedCharacters" :key="char.id" class="gallery-item"
+                    <div v-for="char in filteredCharacters" :key="char.id" class="gallery-item"
                         @click="loadFromGallery(char)">
                         <img v-if="char.image" :src="char.image" alt="Avatar">
                         <div v-else class="gallery-item-placeholder">
@@ -1473,10 +1613,11 @@
 
         // --- IndexedDB Helper ---
         const DB_NAME = 'CharaCreatorDB';
-        const DB_VERSION = 2;
+        const DB_VERSION = 3;
         const STORE_CHARS = 'characters';
         const STORE_LIB = 'library';
         const STORE_THEMES = 'themes';
+        const STORE_CHATS = 'chats';
 
         const openDB = () => {
             return new Promise((resolve, reject) => {
@@ -1491,6 +1632,9 @@
                     }
                     if (!db.objectStoreNames.contains(STORE_THEMES)) {
                         db.createObjectStore(STORE_THEMES, { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_CHATS)) {
+                        db.createObjectStore(STORE_CHATS, { keyPath: 'id' });
                     }
                 };
                 request.onsuccess = () => resolve(request.result);
@@ -1595,6 +1739,8 @@
                 const showQuickActions = ref(false);
                 const showRawOutput = ref(false);
                 const showAutoCharModal = ref(false);
+                const showDescParseModal = ref(false);
+                const parseProgressPct = ref(0);
                 const rawOutputJSON = ref('');
                 const autoCharData = reactive({
                     cardName: '',
@@ -1612,12 +1758,46 @@
                 const chatInput = ref('');
                 const isChatGenerating = ref(false);
 
+                // Undo / Redo
+                const undoStack = ref([]);
+                const redoStack = ref([]);
+                const MAX_UNDO = 20;
+                const takeSnapshot = () => {
+                    const snap = JSON.stringify(character);
+                    if (undoStack.value.length > 0 && undoStack.value[undoStack.value.length - 1] === snap) return;
+                    undoStack.value.push(snap);
+                    if (undoStack.value.length > MAX_UNDO) undoStack.value.shift();
+                    redoStack.value = [];
+                };
+                const undo = () => {
+                    if (undoStack.value.length === 0) return;
+                    redoStack.value.push(JSON.stringify(character));
+                    Object.assign(character, JSON.parse(undoStack.value.pop()));
+                };
+                const redo = () => {
+                    if (redoStack.value.length === 0) return;
+                    undoStack.value.push(JSON.stringify(character));
+                    Object.assign(character, JSON.parse(redoStack.value.pop()));
+                };
+
+                // Gallery / Lorebook search
+                const gallerySearch = ref('');
+                const lorebookSearch = ref('');
+
+                // Import inputs
+                const pngImportInput = ref(null);
+                const jsonImportInput = ref(null);
+
                 // State Data
                 const character = reactive({
                     id: Date.now().toString(),
                     name: '',
                     creator: '',
                     description: '',
+                    personality: '',
+                    system_prompt: '',
+                    post_history_instructions: '',
+                    character_version: '',
                     scenario: '',
                     first_mes: '',
                     mes_example: '',
@@ -1654,6 +1834,8 @@
                     customPrompts: { ...defaultAIPrompts }
                 });
 
+                provide('globalSettings', settings);
+
                 const resetPrompt = (field) => {
                     if (confirm("Reset this prompt instruction back to its default?")) {
                         settings.customPrompts[field] = defaultAIPrompts[field];
@@ -1689,6 +1871,28 @@
                         return item;
                     });
                 });
+
+                const filteredCharacters = computed(() => {
+                    if (!gallerySearch.value.trim()) return savedCharacters.value;
+                    const term = gallerySearch.value.toLowerCase();
+                    return savedCharacters.value.filter(c =>
+                        (c.name || '').toLowerCase().includes(term) ||
+                        (c.tags_input || '').toLowerCase().includes(term) ||
+                        (c.creator || '').toLowerCase().includes(term)
+                    );
+                });
+
+                const filteredLoreEntries = computed(() => {
+                    if (!lorebookSearch.value.trim()) return character.character_book.entries;
+                    const term = lorebookSearch.value.toLowerCase();
+                    return character.character_book.entries.filter(e =>
+                        (e.name || '').toLowerCase().includes(term) ||
+                        (e.keysStr || '').toLowerCase().includes(term) ||
+                        (e.content || '').toLowerCase().includes(term)
+                    );
+                });
+
+                const countTokens = (text) => Math.ceil((text || '').length / 4);
 
                 // Theme Logic
                 const defaultThemes = {
@@ -1841,6 +2045,7 @@
                 const confirmRestore = () => {
                     if (pendingRestoreData.value) {
                         Object.assign(character, pendingRestoreData.value);
+                        loadChatForCharacter(character.id);
                     }
                     showRestoreModal.value = false;
                     pendingRestoreData.value = null;
@@ -1856,6 +2061,12 @@
                 };
 
                 onMounted(async () => {
+                    document.addEventListener('keydown', (e) => {
+                        const tag = document.activeElement?.tagName;
+                        if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+                        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+                    });
                     // Load DB Data first so dropdown options exist
                     await reloadDBData();
 
@@ -1925,6 +2136,7 @@
                 watch(character, () => {
                     if (!showRestoreModal.value) {
                         const hasContent = character.name.trim() || character.creator.trim() || character.description.trim() ||
+                            character.personality.trim() || character.system_prompt.trim() || character.post_history_instructions.trim() ||
                             character.scenario.trim() || character.first_mes.trim() || character.mes_example.trim() ||
                             character.creator_notes.trim() || character.tags_input.trim() || character.image ||
                             (character.alternate_greetings && character.alternate_greetings.some(g => g.trim())) ||
@@ -1980,16 +2192,12 @@
                 };
 
                 const loadFromGallery = (char) => {
+                    takeSnapshot();
                     const defaultChar = {
                         id: Date.now().toString(),
-                        name: '',
-                        creator: '',
-                        description: '',
-                        scenario: '',
-                        first_mes: '',
-                        mes_example: '',
-                        creator_notes: '',
-                        tags_input: '',
+                        name: '', creator: '', description: '',
+                        personality: '', system_prompt: '', post_history_instructions: '', character_version: '',
+                        scenario: '', first_mes: '', mes_example: '', creator_notes: '', tags_input: '',
                         alternate_greetings: [],
                         character_book: { name: '', description: '', entries: [] },
                         extensions: { categories: [] },
@@ -1997,6 +2205,194 @@
                     };
                     Object.assign(character, defaultChar, JSON.parse(JSON.stringify(char)));
                     showGallery.value = false;
+                    gallerySearch.value = '';
+                    loadChatForCharacter(character.id);
+                };
+
+                // Chat persistence
+                const loadChatForCharacter = async (charId) => {
+                    try {
+                        const db = await openDB();
+                        await new Promise((resolve) => {
+                            const tx = db.transaction(STORE_CHATS, 'readonly');
+                            const req = tx.objectStore(STORE_CHATS).get(charId);
+                            req.onsuccess = () => { chatLog.value = req.result ? req.result.messages : []; resolve(); };
+                            req.onerror = () => { chatLog.value = []; resolve(); };
+                        });
+                    } catch(e) { chatLog.value = []; }
+                };
+
+                let chatSaveTimer;
+                watch(chatLog, async () => {
+                    clearTimeout(chatSaveTimer);
+                    chatSaveTimer = setTimeout(async () => {
+                        if (character.id && chatLog.value.length > 0) {
+                            await dbPut(STORE_CHATS, { id: character.id, messages: JSON.parse(JSON.stringify(chatLog.value)) });
+                        }
+                    }, 800);
+                }, { deep: true });
+
+                // PNG / JSON import
+                const readPNGMetadata = (bytes) => {
+                    let offset = 8;
+                    const view = new DataView(bytes.buffer);
+                    const dec = new TextDecoder();
+                    while (offset < bytes.length) {
+                        const length = view.getUint32(offset, false);
+                        const type = dec.decode(bytes.subarray(offset + 4, offset + 8));
+                        if (type === 'tEXt') {
+                            const chunk = bytes.subarray(offset + 8, offset + 8 + length);
+                            const nullIdx = chunk.indexOf(0);
+                            if (dec.decode(chunk.subarray(0, nullIdx)) === 'chara') {
+                                try {
+                                    const b64 = dec.decode(chunk.subarray(nullIdx + 1));
+                                    const bin = atob(b64);
+                                    const utf8 = new Uint8Array(bin.length);
+                                    for (let i = 0; i < bin.length; i++) utf8[i] = bin.charCodeAt(i);
+                                    return JSON.parse(new TextDecoder('utf-8').decode(utf8));
+                                } catch(e) { return null; }
+                            }
+                        }
+                        if (type === 'IEND') break;
+                        offset += 12 + length;
+                    }
+                    return null;
+                };
+
+                const applyDescriptionAsDummy = () => {
+                    character.extensions.categories = [{
+                        id: 'cat_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                        name: 'Description',
+                        descriptors: [{
+                            id: 'desc_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                            name: 'Description',
+                            content: character.description
+                        }]
+                    }];
+                    showDescParseModal.value = false;
+                };
+
+                const parseDescriptionWithAI = async () => {
+                    const desc = character.description;
+                    const prompt = `Parse the following roleplay character description into logical categories and descriptors. Return ONLY valid JSON, no other text, no markdown:\n{\n  "categories": [\n    {\n      "name": "Category Name",\n      "descriptors": [\n        { "name": "Descriptor Name", "content": "Descriptor content" }\n      ]\n    }\n  ]\n}\n\nCharacter description to parse:\n${desc}`;
+                    isGenerating.value = 'descParse';
+                    parseProgressPct.value = 0;
+                    let pct = 0;
+                    const progressInterval = setInterval(() => {
+                        pct += (92 - pct) * 0.07;
+                        parseProgressPct.value = Math.min(92, Math.round(pct));
+                    }, 250);
+                    const result = await callAI(prompt);
+                    clearInterval(progressInterval);
+                    parseProgressPct.value = 100;
+                    await new Promise(r => setTimeout(r, 500));
+                    isGenerating.value = null;
+                    showDescParseModal.value = false;
+                    parseProgressPct.value = 0;
+                    if (!result) return;
+                    try {
+                        const jsonMatch = result.match(/\{[\s\S]*\}/);
+                        if (!jsonMatch) throw new Error('No JSON');
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        if (!parsed.categories || !Array.isArray(parsed.categories)) throw new Error('Bad structure');
+                        character.extensions.categories = parsed.categories.map(cat => ({
+                            id: 'cat_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                            name: cat.name || 'Category',
+                            descriptors: (cat.descriptors || []).map(d => ({
+                                id: 'desc_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                                name: d.name || 'Descriptor',
+                                content: d.content || ''
+                            }))
+                        }));
+                    } catch(e) {
+                        alert('Could not parse AI response. Adding description as a single block instead.');
+                        applyDescriptionAsDummy();
+                    }
+                };
+
+                const applyImportedCard = (cardData, imageDataUrl) => {
+                    const d = cardData.data || cardData;
+                    if (!confirm(`Import "${d.name || 'Unnamed'}"? This will replace your current workspace.`)) return;
+                    takeSnapshot();
+                    const imported = {
+                        id: Date.now().toString(),
+                        name: d.name || '', creator: d.creator || '',
+                        description: d.description || '', personality: d.personality || '',
+                        system_prompt: d.system_prompt || '', post_history_instructions: d.post_history_instructions || '',
+                        character_version: d.character_version || '',
+                        scenario: d.scenario || '', first_mes: d.first_mes || '',
+                        mes_example: d.mes_example || '', creator_notes: d.creator_notes || '',
+                        tags_input: (d.tags || []).join(', '),
+                        alternate_greetings: d.alternate_greetings || [],
+                        character_book: d.character_book ? {
+                            name: d.character_book.name || '', description: d.character_book.description || '',
+                            entries: (d.character_book.entries || []).map(e => ({
+                                id: 'lore_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                                name: e.name || 'Lore', keysStr: Array.isArray(e.keys) ? e.keys.join(', ') : '',
+                                content: e.content || '', insertion_order: e.insertion_order ?? 50,
+                                enabled: e.enabled !== false, constant: e.constant || false,
+                                position: e.position || 'before_char', depth: e.depth ?? 4,
+                                use_regex: e.use_regex || false, priority: e.priority ?? 10
+                            }))
+                        } : { name: '', description: '', entries: [] },
+                        extensions: { categories: (d.extensions && d.extensions.categories) ? d.extensions.categories : [] },
+                        image: imageDataUrl || null
+                    };
+                    Object.assign(character, imported);
+                    if (character.extensions.categories.length === 0) {
+                        if (character.description) {
+                            if (settings.aiEnabled) {
+                                showDescParseModal.value = true;
+                            } else {
+                                applyDescriptionAsDummy();
+                            }
+                        } else {
+                            addCategory();
+                        }
+                    }
+                };
+
+                const triggerPNGImport = () => pngImportInput.value.click();
+                const triggerJSONImport = () => jsonImportInput.value.click();
+
+                const handlePNGImport = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const bytes = new Uint8Array(await file.arrayBuffer());
+                    const cardData = readPNGMetadata(bytes);
+                    if (!cardData) { alert("No character card data found in this PNG."); event.target.value = null; return; }
+                    const reader = new FileReader();
+                    reader.onload = (e) => applyImportedCard(cardData, e.target.result);
+                    reader.readAsDataURL(file);
+                    event.target.value = null;
+                };
+
+                const handleJSONImport = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            const cardData = parsed.spec === 'chara_card_v2' ? parsed : { spec: 'chara_card_v2', data: parsed };
+                            applyImportedCard(cardData, null);
+                        } catch(err) { alert("Failed to parse JSON: " + err.message); }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = null;
+                };
+
+                const regenerateLastResponse = async () => {
+                    if (chatLog.value.length === 0 || isChatGenerating.value) return;
+                    const last = chatLog.value[chatLog.value.length - 1];
+                    if (last.role !== 'char') return;
+                    chatLog.value.pop();
+                    const lastUser = [...chatLog.value].reverse().find(m => m.role === 'user');
+                    if (!lastUser) return;
+                    const saved = chatInput.value;
+                    chatInput.value = lastUser.content;
+                    await sendChatMessage();
+                    chatInput.value = saved;
                 };
 
                 // Node Management
@@ -2008,6 +2404,7 @@
                     });
                 };
                 const removeCategory = (cat) => {
+                    takeSnapshot();
                     const idx = character.extensions.categories.indexOf(cat);
                     if (idx > -1) character.extensions.categories.splice(idx, 1);
                 };
@@ -2019,6 +2416,7 @@
                     });
                 };
                 const removeDescriptor = (cat, desc) => {
+                    takeSnapshot();
                     const idx = cat.descriptors.indexOf(desc);
                     if (idx > -1) cat.descriptors.splice(idx, 1);
                 };
@@ -2031,10 +2429,16 @@
                         keysStr: '',
                         content: '',
                         insertion_order: 50,
-                        constant: false
+                        constant: false,
+                        enabled: true,
+                        position: 'before_char',
+                        depth: 4,
+                        use_regex: false,
+                        priority: 10
                     });
                 };
                 const removeLoreEntry = (entry) => {
+                    takeSnapshot();
                     const idx = character.character_book.entries.indexOf(entry);
                     if (idx > -1) character.character_book.entries.splice(idx, 1);
                 };
@@ -2116,11 +2520,12 @@
                     const charData = {
                         name: character.name || "",
                         description: combinedDescription.trim(),
-                        personality: "",
+                        personality: character.personality || "",
                         scenario: character.scenario || "",
                         first_mes: character.first_mes || "",
                         mes_example: character.mes_example || "",
-                        system_prompt: "",
+                        system_prompt: character.system_prompt || "",
+                        post_history_instructions: character.post_history_instructions || "",
                         creator_notes: character.creator_notes || "",
                         alternate_greetings: [...character.alternate_greetings],
                         character_book: character.character_book ? {
@@ -2136,13 +2541,16 @@
                                 insertion_order: parseInt(e.insertion_order) || 50,
                                 case_sensitive: e.case_sensitive || false,
                                 constant: e.constant || false,
-                                priority: e.priority || 10
+                                priority: e.priority ?? 10,
+                                position: e.position || 'before_char',
+                                depth: e.depth ?? 4,
+                                use_regex: e.use_regex || false
                             }))
                         } : null,
                         tags: tagsArray,
                         creator: character.creator || settings.defaultAuthor || "",
-                        character_version: "main",
-                        extensions: {}
+                        character_version: character.character_version || "main",
+                        extensions: { categories: character.extensions.categories }
                     };
 
                     return {
@@ -2312,47 +2720,64 @@
                 };
 
                 // AI Integration
-                const callAI = async (promptMsg) => {
+                const callAI = async (promptMsg, onChunk = null) => {
                     if (!settings.aiEnabled || !settings.apiKey) {
                         alert("Please enable AI and set an API Key in Settings.");
                         return null;
                     }
-
                     const systemPrompt = "You are a creative writing assistant for roleplay character development. Keep your response concise, relevant, and well-formatted. Output only the requested text without markdown backticks unless requested. No pleasantries.";
-
                     try {
                         if (settings.aiProvider === 'gemini') {
-                            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${settings.apiKey}`, {
+                            const rawModel = settings.modelName || 'gemini-1.5-flash';
+                            const geminiModel = rawModel.startsWith('google/') ? rawModel.slice(7) : rawModel;
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${settings.apiKey}`;
+                            const res = await fetch(url, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    contents: [
-                                        { parts: [{ text: systemPrompt + "\n\n" + promptMsg }] }
-                                    ]
-                                })
+                                body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + "\n\n" + promptMsg }] }] })
                             });
-                            const data = await res.json();
-                            if (data.error) throw new Error(data.error.message);
-                            return data.candidates[0].content.parts[0].text;
-                        }
-                        else if (settings.aiProvider === 'openrouter') {
+                            if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Gemini error'); }
+                            let full = '';
+                            const reader = res.body.getReader();
+                            const dec = new TextDecoder();
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                for (const line of dec.decode(value, { stream: true }).split('\n')) {
+                                    if (!line.startsWith('data: ')) continue;
+                                    const j = line.slice(6).trim();
+                                    if (!j || j === '[DONE]') continue;
+                                    try {
+                                        const t = JSON.parse(j)?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                                        if (t) { full += t; if (onChunk) onChunk(full); }
+                                    } catch(_) {}
+                                }
+                            }
+                            return full;
+                        } else if (settings.aiProvider === 'openrouter') {
                             const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                                 method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${settings.apiKey}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    model: settings.modelName,
-                                    messages: [
-                                        { role: "system", content: systemPrompt },
-                                        { role: "user", content: promptMsg }
-                                    ]
-                                })
+                                headers: { 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ model: settings.modelName, stream: true, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptMsg }] })
                             });
-                            const data = await res.json();
-                            if (data.error) throw new Error(data.error.message);
-                            return data.choices[0].message.content;
+                            if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'OpenRouter error'); }
+                            let full = '';
+                            const reader = res.body.getReader();
+                            const dec = new TextDecoder();
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                for (const line of dec.decode(value, { stream: true }).split('\n')) {
+                                    if (!line.startsWith('data: ')) continue;
+                                    const j = line.slice(6).trim();
+                                    if (!j || j === '[DONE]') continue;
+                                    try {
+                                        const d = JSON.parse(j)?.choices?.[0]?.delta?.content || '';
+                                        if (d) { full += d; if (onChunk) onChunk(full); }
+                                    } catch(_) {}
+                                }
+                            }
+                            return full;
                         }
                     } catch (err) {
                         alert("AI Error: " + err.message);
@@ -2375,18 +2800,12 @@
                 };
 
                 const generateDescriptionAI = async (cat, desc) => {
+                    takeSnapshot();
                     isGenerating.value = desc.id;
                     let prompt = `Write a short description for the character's ${desc.name} (category: ${cat.name}). Name: ${character.name || 'Unknown'}. Background context: ${character.description || 'None'}\n\n`;
-
-                    if (settings.customPrompts.description) {
-                        prompt += `CRITICAL INSTRUCTIONS:\n${settings.customPrompts.description}\n`;
-                    }
-
-                    if (desc.content && desc.content.trim()) {
-                        prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version: "${desc.content}"`;
-                    }
-
-                    const res = await callAI(prompt);
+                    if (settings.customPrompts.description) prompt += `CRITICAL INSTRUCTIONS:\n${settings.customPrompts.description}\n`;
+                    if (desc.content && desc.content.trim()) prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version: "${desc.content}"`;
+                    const res = await callAI(prompt, (partial) => { desc.content = partial; });
                     if (res) desc.content = res;
                     isGenerating.value = null;
                 };
@@ -2407,58 +2826,41 @@
                 };
 
                 const generatePromptAI = async (field) => {
+                    takeSnapshot();
                     isGenerating.value = field;
-
                     let prompt = buildAIContext() + `Write the ${field} for a roleplay character named ${character.name || 'Unknown'}. Make it creative and fit for a character card.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
-
-                    if (settings.customPrompts[field]) {
-                        prompt += settings.customPrompts[field] + "\n";
-                    }
-
+                    if (settings.customPrompts[field]) prompt += settings.customPrompts[field] + "\n";
                     if (character[field] && character[field].trim()) {
                         let expansionText = "(at least 2 to 3 paragraphs)";
                         if (field === 'scenario') expansionText = "(exactly 1 paragraph)";
                         if (field === 'mes_example') expansionText = "(following the formatting rules above)";
                         prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version ${expansionText}: "${character[field]}"`;
                     }
-
-                    const res = await callAI(prompt);
+                    const res = await callAI(prompt, (partial) => { character[field] = partial; });
                     if (res) character[field] = res;
                     isGenerating.value = null;
                 };
 
                 const generateAltGreetingAI = async (index) => {
+                    takeSnapshot();
                     isGenerating.value = 'alt_greeting_' + index;
-
                     let prompt = buildAIContext() + `Write an alternate initial greeting message for a roleplay character named ${character.name || 'Unknown'}. Make it engaging.\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character's name.\n- You MUST use the exact string {{user}} to refer to the user's name.\n`;
-
-                    if (settings.customPrompts.alt_greeting) {
-                        prompt += settings.customPrompts.alt_greeting + "\n";
-                    }
-
+                    if (settings.customPrompts.alt_greeting) prompt += settings.customPrompts.alt_greeting + "\n";
                     if (character.alternate_greetings[index] && character.alternate_greetings[index].trim()) {
                         prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version (at least 2 to 3 paragraphs): "${character.alternate_greetings[index]}"`;
                     }
-
-                    const res = await callAI(prompt);
+                    const res = await callAI(prompt, (partial) => { character.alternate_greetings[index] = partial; });
                     if (res) character.alternate_greetings[index] = res;
                     isGenerating.value = null;
                 };
 
                 const generateLoreAI = async (entry) => {
+                    takeSnapshot();
                     isGenerating.value = entry.id;
-
                     let prompt = buildAIContext() + `Write a lorebook entry for a roleplay character named ${character.name || 'Unknown'}. The entry should focus on the following keywords or theme: "${entry.keysStr || entry.name}".\n\nCRITICAL INSTRUCTIONS:\n- You MUST use the exact string {{char}} to refer to the character.\n- You MUST use the exact string {{user}} to refer to the user.\n`;
-
-                    if (settings.customPrompts.lorebook) {
-                        prompt += settings.customPrompts.lorebook + "\n";
-                    }
-
-                    if (entry.content && entry.content.trim()) {
-                        prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version: "${entry.content}"`;
-                    }
-
-                    const res = await callAI(prompt);
+                    if (settings.customPrompts.lorebook) prompt += settings.customPrompts.lorebook + "\n";
+                    if (entry.content && entry.content.trim()) prompt += `\nPlease use the following as a starting point, and generate a more expanded and detailed version: "${entry.content}"`;
+                    const res = await callAI(prompt, (partial) => { entry.content = partial; });
                     if (res) entry.content = res;
                     isGenerating.value = null;
                 };
@@ -2483,6 +2885,7 @@
                 };
 
                 const autoGenerateCharacter = async () => {
+                    takeSnapshot();
                     if (!autoCharData.cardName.trim() || !autoCharData.firstName.trim()) {
                         alert("Card Name and First Name are required fields.");
                         return;
@@ -2539,43 +2942,43 @@
 
                 const sendChatMessage = async () => {
                     if (!chatInput.value.trim() || isChatGenerating.value) return;
-
                     const userMessage = chatInput.value.trim();
                     chatLog.value.push({ role: 'user', content: userMessage });
                     chatInput.value = '';
                     isChatGenerating.value = true;
 
-                    // Simple chat context building
+                    const streamIdx = chatLog.value.length;
+                    chatLog.value.push({ role: 'char', content: '' });
+
                     let contextStr = buildAIContext();
-
-                    // Add previous chat history
-                    const historyTail = chatLog.value.slice(-6); // Keep last few messages
-                    historyTail.forEach(msg => {
-                        if (msg.role === 'user') {
-                            contextStr += `\n{{user}}: ${msg.content}`;
-                        } else if (msg.role === 'char') {
-                            contextStr += `\n{{char}}: ${msg.content}`;
-                        }
+                    chatLog.value.slice(-8).forEach(msg => {
+                        if (msg.role === 'user') contextStr += `\n{{user}}: ${msg.content}`;
+                        else if (msg.role === 'char') contextStr += `\n{{char}}: ${msg.content}`;
                     });
 
-                    let prompt = contextStr + `\n\nWrite the next response for ${character.name || 'the character'}. Reply IN CHARACTER. The user just said:\n"${userMessage}"\n\nCRITICAL INSTRUCTIONS:\n- Keep your response in character.\n- Describe actions using asterisks.\n- Enclose spoken words in quotes.\n- Do NOT prefix your response with {{char}}: or your name. Just write the response.\n`;
+                    const charNameRegex = character.name ? new RegExp(`^${character.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*`, 'i') : null;
+                    const cleanResponse = (t) => t.replace(/^\{\{char\}\}:\s*/gi, '').replace(charNameRegex || /^$/, '').trim();
 
-                    const res = await callAI(prompt);
+                    const prompt = contextStr + `\n\nWrite the next response for ${character.name || 'the character'}. Reply IN CHARACTER. The user just said:\n"${userMessage}"\n\nCRITICAL INSTRUCTIONS:\n- Keep your response in character.\n- Describe actions using asterisks.\n- Enclose spoken words in quotes.\n- Do NOT prefix your response with {{char}}: or your name. Just write the response.\n`;
+
+                    const scrollChat = () => nextTick(() => {
+                        const el = document.querySelector('.chat-scroll-area');
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+
+                    const res = await callAI(prompt, (partial) => {
+                        chatLog.value[streamIdx].content = cleanResponse(partial);
+                        scrollChat();
+                    });
+
                     if (res) {
-                        // Strip leading {{char}}: if AI included it anyway
-                        let cleanRes = res.replace(/^\{\{char\}\}:\s*/gi, '').replace(new RegExp(`^${character.name}:\s*`, 'gi'), '').trim();
-                        chatLog.value.push({ role: 'char', content: cleanRes });
+                        chatLog.value[streamIdx].content = cleanResponse(res);
                     } else {
-                        chatLog.value.push({ role: 'system', content: 'Connection failed or error generating response.' });
+                        chatLog.value[streamIdx].role = 'system';
+                        chatLog.value[streamIdx].content = 'Connection failed or error generating response.';
                     }
-
                     isChatGenerating.value = false;
-
-                    // Scroll to bottom (wait for DOM update)
-                    nextTick(() => {
-                        const chatContainer = document.querySelector('.node-container > div[style*="overflow-y"]');
-                        if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
-                    });
+                    scrollChat();
                 };
 
                 return {
@@ -2596,8 +2999,15 @@
                     saveToLibrary, loadFromLibrary, deleteFromLibrary,
                     downloadJSON, exportPNG, testAIConnection, sendChatMessage, removeChatMessage,
                     generateDescriptionAI, generatePromptAI, generateAltGreetingAI, generateLoreAI, resetPrompt,
-                    insertMacro,
-                    expandAll, collapseAll
+                    insertMacro, expandAll, collapseAll,
+                    undoStack, redoStack, undo, redo,
+                    gallerySearch, filteredCharacters,
+                    lorebookSearch, filteredLoreEntries,
+                    countTokens,
+                    pngImportInput, jsonImportInput, triggerPNGImport, triggerJSONImport,
+                    handlePNGImport, handleJSONImport,
+                    showDescParseModal, parseProgressPct, applyDescriptionAsDummy, parseDescriptionWithAI,
+                    regenerateLastResponse
                 }
             }
         });
