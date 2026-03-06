@@ -22,43 +22,48 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="logo.png">
 
     <style>
         :root {
-            /* Fallback/Base Theme (Dark Nebula - Neon Vibe) */
-            --bg-color: radial-gradient(circle at 50% 10%, #4a1c6a 0%, #15101a 60%, #08030f 100%);
-            --surface-color: rgba(255, 255, 255, 0.05);
-            --surface-hover: rgba(255, 255, 255, 0.1);
-            --header-bg: rgba(10, 5, 15, 0.6);
-            --text-main: #ffffff;
-            --text-muted: #a19bb0;
-            --accent-pink: #d936c9;
-            --accent-purple: #8e24e6;
-            --node-bg: rgba(255, 255, 255, 0.03);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --danger: #ff3b5c;
-            --warning: #ff9b33;
-            --success: #00e676;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --border-radius: 16px;
-            --backdrop-blur: blur(20px);
+            /* Fallback/Base Theme (Dark Veldt) */
+            --bg-color: radial-gradient(ellipse at 25% 0%, #091a0d 0%, #060c07 55%, #020602 100%);
+            --surface-color: rgba(168, 232, 67, 0.04);
+            --surface-hover: rgba(168, 232, 67, 0.09);
+            --header-bg: rgba(3, 7, 3, 0.88);
+            --text-main: #dff0e0;
+            --text-secondary: #8aad8c;
+            --text-muted: #4d7352;
+            --accent-pink: #6ab547;
+            --accent-purple: #a8e843;
+            --node-bg: rgba(0, 18, 4, 0.55);
+            --border-color: rgba(168, 232, 67, 0.1);
+            --danger: #ff4d5a;
+            --warning: #f0a030;
+            --success: #a8e843;
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+            --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 12px;
+            --backdrop-blur: blur(18px);
         }
 
         [data-theme="light"] {
-            --bg-color: linear-gradient(135deg, #f5f0fa 0%, #e0d5ed 100%);
-            --surface-color: rgba(255, 255, 255, 0.7);
-            --surface-hover: rgba(243, 232, 255, 0.8);
-            --header-bg: rgba(255, 255, 255, 0.85);
-            --text-main: #2d2d2d;
-            --text-muted: #6a5a7a;
-            --accent-pink: #db2777;
-            --accent-purple: #9333ea;
-            --node-bg: rgba(250, 245, 255, 0.6);
-            --border-color: rgba(0, 0, 0, 0.08);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            --bg-color: linear-gradient(150deg, #f0f7f1 0%, #e2ede4 100%);
+            --surface-color: rgba(255, 255, 255, 0.8);
+            --surface-hover: rgba(80, 160, 95, 0.1);
+            --header-bg: rgba(255, 255, 255, 0.92);
+            --text-main: #182b1a;
+            --text-secondary: #4a7050;
+            --text-muted: #6a8f6e;
+            --accent-pink: #3d9e52;
+            --accent-purple: #2d7a40;
+            --node-bg: rgba(235, 248, 237, 0.9);
+            --border-color: rgba(60, 140, 80, 0.14);
+            --danger: #e02d3c;
+            --warning: #d97706;
+            --success: #3d9e52;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
         }
 
         * {
@@ -68,7 +73,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             background: var(--bg-color);
             background-attachment: fixed;
             color: var(--text-main);
@@ -128,8 +133,8 @@
 
         .icon-btn.active,
         .icon-btn:hover {
-            color: var(--accent-pink);
-            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--accent-purple);
+            background-color: rgba(168, 232, 67, 0.08);
         }
 
         .header-left .icon-btn {
@@ -149,7 +154,7 @@
         .char-avatar-placeholder {
             width: 40px;
             height: 40px;
-            border-radius: 4px;
+            border-radius: 6px;
             background-color: var(--surface-color);
             border: 1px dashed var(--text-muted);
             display: flex;
@@ -160,6 +165,12 @@
             color: var(--text-muted);
             cursor: pointer;
             line-height: 1.1;
+            transition: var(--transition);
+        }
+
+        .char-avatar-placeholder:hover {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
         }
 
         .char-name-input {
@@ -168,7 +179,7 @@
             color: var(--text-main);
             font-size: 1.2rem;
             font-weight: 500;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             width: 100%;
             min-width: 120px;
             outline: none;
@@ -180,11 +191,11 @@
 
         /* Quick Export Bar */
         .quick-actions-bar {
-            display: flex;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
             background: var(--header-bg);
             backdrop-filter: var(--backdrop-blur);
-            padding: 0.75rem;
+            padding: 0.5rem 0.25rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid var(--border-color);
         }
@@ -193,21 +204,28 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: white;
-            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
             cursor: pointer;
             transition: var(--transition);
             background: none;
             border: none;
-            gap: 0.25rem;
+            gap: 0.3rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 8px;
         }
 
         .action-item i {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .action-item:hover {
-            transform: translateY(-2px);
+            color: var(--accent-purple);
+            background: rgba(168, 232, 67, 0.07);
+            transform: translateY(-1px);
         }
 
         /* Main Content Container */
@@ -222,9 +240,11 @@
 
         .section-title {
             text-align: center;
-            color: #ff009d;
-            font-size: 1.1rem;
-            font-weight: 500;
+            color: var(--accent-pink);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             margin-bottom: 1rem;
         }
 
@@ -232,16 +252,18 @@
         .form-control {
             width: 100%;
             padding: 0.75rem;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--node-bg);
             border: 1px solid var(--border-color);
             color: inherit;
             border-radius: var(--border-radius);
             font-family: inherit;
             outline: none;
+            transition: var(--transition);
         }
 
         .form-control:focus {
-            border-color: var(--accent-pink);
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 2px rgba(168, 232, 67, 0.12);
         }
 
         .form-control option {
@@ -270,7 +292,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(168, 232, 67, 0.15);
+            border: 1px solid rgba(168, 232, 67, 0.2);
             transition: .4s;
         }
 
@@ -287,7 +310,7 @@
 
         input:checked+.slider {
             background-color: var(--accent-purple);
-            box-shadow: 0 0 10px var(--accent-purple);
+            box-shadow: 0 0 10px rgba(168, 232, 67, 0.5);
         }
 
         input:checked+.slider:before {
@@ -305,23 +328,25 @@
         /* Buttons */
         .primary-btn {
             background-color: var(--accent-purple);
-            color: white;
+            color: #0a1a0a;
             border: none;
             padding: 0.75rem 1.5rem;
             border-radius: var(--border-radius);
             cursor: pointer;
             font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.02em;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            box-shadow: 0 4px 15px rgba(142, 36, 230, 0.4);
+            box-shadow: 0 4px 18px rgba(168, 232, 67, 0.25);
         }
 
         .primary-btn:hover {
             background-color: var(--accent-pink);
-            box-shadow: 0 6px 20px rgba(217, 54, 201, 0.6);
+            box-shadow: 0 6px 24px rgba(106, 181, 71, 0.4);
             transform: translateY(-2px);
         }
 
@@ -419,8 +444,8 @@
 
         .gallery-action-btn:hover {
             background: var(--accent-purple);
-            color: white;
-            border-color: var(--accent-pink);
+            color: #0a1a0a;
+            border-color: var(--accent-purple);
             transform: scale(1.1);
         }
 
@@ -448,16 +473,17 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             border: 1px solid var(--border-color);
-            background: rgba(10, 5, 15, 0.4);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-left: 2px solid rgba(168, 232, 67, 0.2);
+            background: rgba(4, 14, 6, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
         }
 
         .node-theme-purple {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%), var(--accent-purple);
+            background: linear-gradient(135deg, rgba(168, 232, 67, 0.07) 0%, rgba(0, 0, 0, 0) 100%), #0d2b15;
         }
 
         .node-theme-pink {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 100%), var(--accent-pink);
+            background: linear-gradient(135deg, rgba(168, 232, 67, 0.04) 0%, rgba(0, 0, 0, 0) 100%), #071509;
         }
 
         .node-header {
@@ -543,8 +569,8 @@
 
         .node-ghost {
             opacity: 0.5;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px dashed var(--accent-pink) !important;
+            background: rgba(168, 232, 67, 0.04);
+            border: 1px dashed var(--accent-purple) !important;
         }
 
         .macro-btn {
@@ -567,7 +593,7 @@
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 0.85rem;
             resize: vertical;
             min-height: 80px;
@@ -576,7 +602,7 @@
         }
 
         .node-textarea::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+            color: var(--text-muted);
         }
 
         /* Lists */
@@ -610,6 +636,27 @@
         .mb-1 {
             margin-bottom: 0.5rem;
         }
+
+        /* Macro highlighting overlay */
+        .macro-wrapper { position: relative; }
+        .macro-hl {
+            position: absolute; top: 0; left: 0; width: 100%; min-height: 100%;
+            white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
+            overflow: hidden; pointer-events: none;
+            font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; line-height: 1.5;
+            color: var(--text-main); padding: 0; margin: 0; border: none;
+        }
+        .macro-hl-inner { display: block; }
+        .macro-char { background: rgba(106,181,71,0.2); color: var(--accent-pink); border-radius: 3px; padding: 0 1px; }
+        .macro-user { background: rgba(168,232,67,0.18); color: var(--accent-purple); border-radius: 3px; padding: 0 1px; }
+        .macro-start { background: rgba(240,160,48,0.2); color: var(--warning); border-radius: 3px; padding: 0 1px; }
+        .macro-ta { position: relative; z-index: 1; background: transparent !important; color: transparent !important; caret-color: var(--text-main); }
+        /* Chat bubble edit mode */
+        .chat-edit-area { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid var(--accent-pink); border-radius: 8px; padding: 0.5rem; color: white; font-family: inherit; font-size: 0.9rem; resize: none; min-height: 60px; }
+        /* Tag suggestions */
+        .tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem; }
+        .tag-pill { background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 99px; padding: 0.15rem 0.6rem; font-size: 0.72rem; cursor: pointer; transition: var(--transition); }
+        .tag-pill:hover { background: var(--accent-purple); color: #0a1a0a; border-color: transparent; }
 
         @keyframes fadeIn {
             from {
@@ -749,6 +796,14 @@
                     <i class="fas fa-redo"></i>
                     <span>Redo</span>
                 </button>
+                <button class="action-item" @click="showFindReplace = true" title="Find & Replace">
+                    <i class="fas fa-search"></i>
+                    <span>Find & Replace</span>
+                </button>
+                <button class="action-item" @click="openExportPreview" title="Preview Card">
+                    <i class="fas fa-eye"></i>
+                    <span>Preview</span>
+                </button>
             </div>
         </div>
 
@@ -845,8 +900,7 @@
                         </div>
                         <span :style="{fontSize:'0.75rem', color: countTokens(character.first_mes)>=1000?'var(--danger)':countTokens(character.first_mes)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.first_mes) }} tokens</span>
                     </div>
-                    <textarea class="node-textarea" v-model="character.first_mes"
-                        placeholder="The very first message the character sends..."></textarea>
+                    <macro-textarea v-model="character.first_mes" placeholder="The very first message the character sends..."></macro-textarea>
                 </accordion-node>
 
                 <accordion-node title="Alternate Greetings" theme="purple" has-add @add="addAltGreeting">
@@ -863,8 +917,7 @@
                                     @click="insertMacro($event, character.alternate_greetings, i, '{{user}}')"
                                     title="Insert user macro" v-text="'{{user}}'"></button>
                             </div>
-                            <textarea class="node-textarea" v-model="character.alternate_greetings[i]"
-                                placeholder="Enter greeting..."></textarea>
+                            <macro-textarea v-model="character.alternate_greetings[i]" placeholder="Enter greeting..."></macro-textarea>
                         </accordion-node>
                         <div v-if="character.alternate_greetings.length === 0" class="text-muted"
                             style="font-size: 0.8rem; padding: 1rem; text-align:center;">
@@ -887,8 +940,7 @@
                         </div>
                         <span :style="{fontSize:'0.75rem', color: countTokens(character.scenario)>=1000?'var(--danger)':countTokens(character.scenario)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.scenario) }} tokens</span>
                     </div>
-                    <textarea class="node-textarea" v-model="character.scenario"
-                        placeholder="The setting or scenario..."></textarea>
+                    <macro-textarea v-model="character.scenario" placeholder="The setting or scenario..."></macro-textarea>
                 </accordion-node>
 
                 <accordion-node title="Example Dialogs" theme="purple" has-generator
@@ -900,8 +952,7 @@
                         </div>
                         <span :style="{fontSize:'0.75rem', color: countTokens(character.mes_example)>=1000?'var(--danger)':countTokens(character.mes_example)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.mes_example) }} tokens</span>
                     </div>
-                    <textarea class="node-textarea" v-model="character.mes_example"
-                        placeholder="{{user}}: Hello!&#10;{{char}}: General Kenobi!"></textarea>
+                    <macro-textarea v-model="character.mes_example" placeholder="{{user}}: Hello!&#10;{{char}}: General Kenobi!" min-height="160px"></macro-textarea>
                 </accordion-node>
 
                 <accordion-node title="Personality Summary" theme="purple">
@@ -918,8 +969,7 @@
                         </div>
                         <span :style="{fontSize:'0.75rem', color: countTokens(character.system_prompt)>=1000?'var(--danger)':countTokens(character.system_prompt)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.system_prompt) }} tokens</span>
                     </div>
-                    <textarea class="node-textarea" v-model="character.system_prompt"
-                        placeholder="System-level instructions injected before the conversation..."></textarea>
+                    <macro-textarea v-model="character.system_prompt" placeholder="System-level instructions injected before the conversation..."></macro-textarea>
                 </accordion-node>
 
                 <accordion-node title="Post History Instructions" theme="purple">
@@ -930,8 +980,7 @@
                         </div>
                         <span :style="{fontSize:'0.75rem', color: countTokens(character.post_history_instructions)>=1000?'var(--danger)':countTokens(character.post_history_instructions)>=500?'var(--warning)':'var(--text-muted)'}">~{{ countTokens(character.post_history_instructions) }} tokens</span>
                     </div>
-                    <textarea class="node-textarea" v-model="character.post_history_instructions"
-                        placeholder="Instructions injected after chat history (jailbreak position)..."></textarea>
+                    <macro-textarea v-model="character.post_history_instructions" placeholder="Instructions injected after chat history (jailbreak position)..."></macro-textarea>
                 </accordion-node>
 
                 <accordion-node title="Creator Notes" theme="purple">
@@ -942,6 +991,9 @@
                 <accordion-node title="Tags" theme="purple">
                     <input type="text" class="node-textarea" v-model="character.tags_input"
                         placeholder="Comma separated tags (e.g. fantasy, male, original)">
+                    <div class="tag-suggestions">
+                        <span v-for="tag in commonTags" :key="tag" class="tag-pill" @click="appendTag(tag)">{{ tag }}</span>
+                    </div>
                     <div style="margin-top:0.5rem;">
                         <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Character Version</label>
                         <input type="text" class="node-textarea" v-model="character.character_version"
@@ -986,7 +1038,7 @@
                                     Order <input type="number" v-model.number="entry.insertion_order" style="width:45px; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); color:white; border-radius:4px; padding:0.2rem; text-align:center;">
                                 </div>
                             </div>
-                            <textarea class="node-textarea mt-1" v-model="entry.content" placeholder="..." style="min-height: 120px;"></textarea>
+                            <macro-textarea v-model="entry.content" placeholder="..." min-height="120px"></macro-textarea>
                             <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed rgba(255,255,255,0.1); font-size:0.8rem; color:var(--text-muted);">
                                 <label>Position:
                                     <select v-model="entry.position" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; padding:0.15rem 0.3rem; margin-left:0.25rem; font-size:0.8rem;">
@@ -1064,12 +1116,23 @@
                             <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;"
                                 :style="{'flex-direction': msg.role === 'user' ? 'row-reverse' : 'row'}">
                                 <span>{{ msg.role === 'user' ? 'You' : (character.name || 'Character') }}</span>
+                                <i class="fas fa-pencil-alt"
+                                    style="cursor: pointer; opacity: 0.6; font-size: 0.7rem; color: var(--text-muted);"
+                                    @click="startChatEdit(index, msg.content)" title="Edit Message"
+                                    onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6"></i>
                                 <i class="fas fa-trash"
                                     style="cursor: pointer; opacity: 0.6; font-size: 0.75rem; color: var(--danger);"
                                     @click="removeChatMessage(index)" title="Remove Message"
                                     onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6"></i>
                             </div>
-                            <div style="padding: 0.75rem 1rem; border-radius: 12px; line-height: 1.4; color: white; word-wrap: break-word; white-space: pre-wrap;"
+                            <div v-if="editingChatIndex === index" style="width:100%;">
+                                <textarea class="chat-edit-area" v-model="editingChatContent" @keyup.enter.ctrl="saveChatEdit(index)" @keyup.escape="editingChatIndex = -1"></textarea>
+                                <div style="display:flex; gap:0.5rem; margin-top:0.25rem; justify-content:flex-end;">
+                                    <button class="node-btn" style="font-size:0.8rem;" @click="editingChatIndex = -1">Cancel</button>
+                                    <button class="node-btn success" style="font-size:0.8rem;" @click="saveChatEdit(index)">Save (Ctrl+Enter)</button>
+                                </div>
+                            </div>
+                            <div v-else style="padding: 0.75rem 1rem; border-radius: 12px; line-height: 1.4; color: white; word-wrap: break-word; white-space: pre-wrap;"
                                 :style="{
                                 'background': msg.role === 'user' ? 'var(--accent-purple)' : 'rgba(255,255,255,0.08)',
                                 'border': msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
@@ -1134,6 +1197,25 @@
                             <i class="fas" :class="isTestingAI ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
                             {{ isTestingAI ? 'Testing...' : 'Test Connection' }}
                         </button>
+
+                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 1rem;">
+                            <label style="color:white; font-weight:500; font-size:0.9rem; display:block; margin-bottom:0.75rem;"><i class="fas fa-sliders-h" style="color:var(--text-muted); margin-right:0.5rem;"></i>Sampler Settings</label>
+                            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:100px;">
+                                    <label style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:0.25rem;">Temperature <span style="color:var(--accent-pink); font-size:0.75rem;">{{ settings.temperature }}</span></label>
+                                    <input type="range" v-model.number="settings.temperature" min="0" max="2" step="0.05" style="width:100%; accent-color:var(--accent-pink);">
+                                </div>
+                                <div style="flex:1; min-width:100px;">
+                                    <label style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:0.25rem;">Top-P <span style="color:var(--accent-pink); font-size:0.75rem;">{{ settings.topP }}</span></label>
+                                    <input type="range" v-model.number="settings.topP" min="0" max="1" step="0.05" style="width:100%; accent-color:var(--accent-pink);">
+                                </div>
+                                <div style="flex:1; min-width:100px;">
+                                    <label style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:0.25rem;">Max Tokens</label>
+                                    <input type="number" v-model.number="settings.maxTokens" min="128" max="32768" step="128" class="form-control" style="padding:0.4rem; font-size:0.85rem;">
+                                </div>
+                            </div>
+                        </div>
+
                         <div v-if="connectionStatus.message"
                             :style="{color: connectionStatus.success ? 'var(--success)' : 'var(--danger)', marginTop: '0.5rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: '500'}">
                             {{ connectionStatus.message }}
@@ -1254,8 +1336,8 @@
                             <label style="color:white; font-weight:500;">Active Theme</label>
                             <select v-model="settings.currentThemeId" class="form-control" style="width: 200px;"
                                 @change="applyTheme">
-                                <option value="defaultDark">Dark Nebula (Default)</option>
-                                <option value="defaultLight">Light Aurora (Default)</option>
+                                <option value="defaultDark">Dark Veldt (Default)</option>
+                                <option value="defaultLight">Sage Light (Default)</option>
                                 <option v-for="t in savedThemes" :key="t.id" :value="t.id">{{ t.name }}</option>
                             </select>
                         </div>
@@ -1533,6 +1615,74 @@
             </div>
         </div>
 
+
+        <!-- Find & Replace Modal -->
+        <div v-if="showFindReplace" class="overlay" @click.self="showFindReplace = false">
+            <div class="overlay-content" style="max-width: 500px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;"><i class="fas fa-search" style="color:var(--accent-pink); margin-right:0.5rem;"></i>Find &amp; Replace</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="showFindReplace = false"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <div>
+                        <label style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:0.25rem;">Find</label>
+                        <input type="text" v-model="findText" class="form-control" placeholder="Text to find..." @keyup.enter="doFindReplace">
+                    </div>
+                    <div>
+                        <label style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:0.25rem;">Replace with</label>
+                        <input type="text" v-model="replaceText" class="form-control" placeholder="Replacement text (leave empty to delete)...">
+                    </div>
+                    <div v-if="findReplaceCount !== null" style="font-size:0.85rem; text-align:center; padding:0.5rem; border-radius:8px;"
+                        :style="{color: findReplaceCount > 0 ? 'var(--success)' : 'var(--text-muted)', background: findReplaceCount > 0 ? 'rgba(0,230,118,0.1)' : 'rgba(255,255,255,0.05)'}">
+                        <i class="fas" :class="findReplaceCount > 0 ? 'fa-check' : 'fa-info-circle'"></i>
+                        {{ findReplaceCount > 0 ? findReplaceCount + ' replacement(s) made' : 'No matches found' }}
+                    </div>
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.5rem;">
+                        <button class="primary-btn" style="background:transparent; border:1px solid var(--border-color);" @click="showFindReplace = false">Cancel</button>
+                        <button class="primary-btn" @click="doFindReplace" :disabled="!findText.trim()"><i class="fas fa-exchange-alt"></i> Replace All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Preview Modal -->
+        <div v-if="showExportPreview" class="overlay" @click.self="showExportPreview = false">
+            <div class="overlay-content" style="max-width: 700px; width:95%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;"><i class="fas fa-eye" style="color:var(--accent-pink); margin-right:0.5rem;"></i>Card Preview
+                        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:0.5rem;">{{char}} replaced with actual name</span>
+                    </h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="showExportPreview = false"><i class="fas fa-times"></i></button>
+                </div>
+                <div v-if="exportPreviewData" style="display:flex; flex-direction:column; gap:1rem; font-size:0.85rem;">
+                    <div v-if="exportPreviewData.description">
+                        <div style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:0.25rem;">Description</div>
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem; white-space:pre-wrap; color:var(--text-main); max-height:200px; overflow-y:auto;">{{ exportPreviewData.description }}</div>
+                    </div>
+                    <div v-if="exportPreviewData.first_mes">
+                        <div style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:0.25rem;">First Message</div>
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem; white-space:pre-wrap; color:var(--text-main); max-height:150px; overflow-y:auto;">{{ exportPreviewData.first_mes }}</div>
+                    </div>
+                    <div v-if="exportPreviewData.scenario">
+                        <div style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:0.25rem;">Scenario</div>
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem; white-space:pre-wrap; color:var(--text-main);">{{ exportPreviewData.scenario }}</div>
+                    </div>
+                    <div v-if="exportPreviewData.mes_example">
+                        <div style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:0.25rem;">Example Dialogs</div>
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem; white-space:pre-wrap; color:var(--text-main); max-height:150px; overflow-y:auto;">{{ exportPreviewData.mes_example }}</div>
+                    </div>
+                    <div v-if="exportPreviewData.system_prompt">
+                        <div style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:0.25rem;">System Prompt</div>
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem; white-space:pre-wrap; color:var(--text-main); max-height:120px; overflow-y:auto;">{{ exportPreviewData.system_prompt }}</div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.5rem;">
+                        <button class="primary-btn" @click="openRawOutput"><i class="fas fa-code"></i> Raw JSON</button>
+                        <button class="primary-btn" @click="exportPNG"><i class="fas fa-magic"></i> Export PNG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Gallery Overlay -->
         <div v-if="showGallery" class="overlay" @click.self="showGallery = false">
             <div class="overlay-content">
@@ -1577,6 +1727,20 @@
         </div>
 
     </div>
+
+    <!-- MacroTextarea Template -->
+    <script type="text/x-template" id="macro-textarea-template">
+        <div class="macro-wrapper">
+            <div class="macro-hl" ref="hlRef">
+                <span class="macro-hl-inner" :style="{'marginTop': '-' + scrollOffset + 'px'}" v-html="highlighted + '\n'"></span>
+            </div>
+            <textarea class="node-textarea macro-ta" :class="extraClass" ref="taRef"
+                :value="modelValue" :placeholder="placeholder"
+                :style="minHeight ? 'min-height:' + minHeight : ''"
+                @input="$emit('update:modelValue', $event.target.value)"
+                @scroll="onScroll"></textarea>
+        </div>
+    </script>
 
     <!-- Accordion Node Template -->
     <script type="text/x-template" id="accordion-node-template">
@@ -1675,6 +1839,40 @@
             });
         };
 
+
+        // --- MacroTextarea Component ---
+        const MacroTextarea = {
+            template: '#macro-textarea-template',
+            props: {
+                modelValue: { type: String, default: '' },
+                placeholder: { type: String, default: '' },
+                minHeight: { type: String, default: '' },
+                extraClass: { type: String, default: '' }
+            },
+            emits: ['update:modelValue'],
+            setup(props, { emit }) {
+                const { ref, computed } = Vue;
+                const hlRef = ref(null);
+                const taRef = ref(null);
+                const scrollOffset = ref(0);
+
+                const highlighted = computed(() => {
+                    const esc = (props.modelValue || '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    return esc
+                        .replace(/\{\{char\}\}/g, '<mark class="macro-char">{{char}}</mark>')
+                        .replace(/\{\{user\}\}/g, '<mark class="macro-user">{{user}}</mark>')
+                        .replace(/&lt;START&gt;/g, '<mark class="macro-start">&lt;START&gt;</mark>');
+                });
+
+                const onScroll = (e) => { scrollOffset.value = e.target.scrollTop; };
+
+                return { hlRef, taRef, highlighted, scrollOffset, onScroll };
+            }
+        };
+
         // --- Accordion Component ---
         const AccordionNode = {
             template: '#accordion-node-template',
@@ -1720,7 +1918,7 @@
 
         // --- Main App ---
         const app = createApp({
-            components: { AccordionNode, draggable: window.vuedraggable },
+            components: { AccordionNode, MacroTextarea, draggable: window.vuedraggable },
             setup() {
                 const globalExpandTrigger = ref(0);
                 const globalCollapseTrigger = ref(0);
@@ -1788,6 +1986,16 @@
                 const pngImportInput = ref(null);
                 const jsonImportInput = ref(null);
 
+                // v1.6 state
+                const showFindReplace = ref(false);
+                const findText = ref('');
+                const replaceText = ref('');
+                const findReplaceCount = ref(null);
+                const showExportPreview = ref(false);
+                const exportPreviewData = ref(null);
+                const editingChatIndex = ref(-1);
+                const editingChatContent = ref('');
+
                 // State Data
                 const character = reactive({
                     id: Date.now().toString(),
@@ -1828,6 +2036,9 @@
                     apiKey: '',
                     modelName: 'google/gemini-2.5-pro',
                     defaultAuthor: '',
+                    temperature: 1.0,
+                    topP: 1.0,
+                    maxTokens: 2048,
                     experimental: {
                         autoCharacter: false
                     },
@@ -1897,46 +2108,48 @@
                 // Theme Logic
                 const defaultThemes = {
                     defaultDark: {
-                        id: 'defaultDark', name: 'Dark Nebula',
+                        id: 'defaultDark', name: 'Dark Veldt',
                         vars: {
-                            '--bg-color': 'radial-gradient(circle at 50% 10%, #4a1c6a 0%, #15101a 60%, #08030f 100%)',
-                            '--surface-color': 'rgba(255, 255, 255, 0.05)',
-                            '--surface-hover': 'rgba(255, 255, 255, 0.1)',
-                            '--header-bg': 'rgba(10, 5, 15, 0.6)',
-                            '--text-main': '#ffffff',
-                            '--text-muted': '#a19bb0',
-                            '--accent-pink': '#d936c9',
-                            '--accent-purple': '#8e24e6',
-                            '--node-bg': 'rgba(255, 255, 255, 0.03)',
-                            '--border-color': 'rgba(255, 255, 255, 0.08)',
-                            '--danger': '#ff3b5c',
-                            '--warning': '#ff9b33',
-                            '--success': '#00e676',
-                            '--shadow': '0 8px 32px rgba(0, 0, 0, 0.5)',
-                            '--transition': 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            '--border-radius': '16px',
-                            '--backdrop-blur': 'blur(20px)'
+                            '--bg-color': 'radial-gradient(ellipse at 25% 0%, #091a0d 0%, #060c07 55%, #020602 100%)',
+                            '--surface-color': 'rgba(168, 232, 67, 0.04)',
+                            '--surface-hover': 'rgba(168, 232, 67, 0.09)',
+                            '--header-bg': 'rgba(3, 7, 3, 0.88)',
+                            '--text-main': '#dff0e0',
+                            '--text-secondary': '#8aad8c',
+                            '--text-muted': '#4d7352',
+                            '--accent-pink': '#6ab547',
+                            '--accent-purple': '#a8e843',
+                            '--node-bg': 'rgba(0, 18, 4, 0.55)',
+                            '--border-color': 'rgba(168, 232, 67, 0.1)',
+                            '--danger': '#ff4d5a',
+                            '--warning': '#f0a030',
+                            '--success': '#a8e843',
+                            '--shadow': '0 8px 40px rgba(0, 0, 0, 0.7)',
+                            '--transition': 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '--border-radius': '12px',
+                            '--backdrop-blur': 'blur(18px)'
                         }
                     },
                     defaultLight: {
-                        id: 'defaultLight', name: 'Light Aurora',
+                        id: 'defaultLight', name: 'Sage Light',
                         vars: {
-                            '--bg-color': 'linear-gradient(135deg, #f5f0fa 0%, #e0d5ed 100%)',
-                            '--surface-color': 'rgba(255, 255, 255, 0.7)',
-                            '--surface-hover': 'rgba(243, 232, 255, 0.8)',
-                            '--header-bg': 'rgba(255, 255, 255, 0.85)',
-                            '--text-main': '#2d2d2d',
-                            '--text-muted': '#6a5a7a',
-                            '--accent-pink': '#db2777',
-                            '--accent-purple': '#9333ea',
-                            '--node-bg': 'rgba(250, 245, 255, 0.6)',
-                            '--border-color': 'rgba(0, 0, 0, 0.08)',
-                            '--danger': '#e11d48',
-                            '--warning': '#f59e0b',
-                            '--success': '#10b981',
-                            '--shadow': '0 8px 32px rgba(0, 0, 0, 0.05)',
-                            '--transition': 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            '--border-radius': '8px',
+                            '--bg-color': 'linear-gradient(150deg, #f0f7f1 0%, #e2ede4 100%)',
+                            '--surface-color': 'rgba(255, 255, 255, 0.8)',
+                            '--surface-hover': 'rgba(80, 160, 95, 0.1)',
+                            '--header-bg': 'rgba(255, 255, 255, 0.92)',
+                            '--text-main': '#182b1a',
+                            '--text-secondary': '#4a7050',
+                            '--text-muted': '#6a8f6e',
+                            '--accent-pink': '#3d9e52',
+                            '--accent-purple': '#2d7a40',
+                            '--node-bg': 'rgba(235, 248, 237, 0.9)',
+                            '--border-color': 'rgba(60, 140, 80, 0.14)',
+                            '--danger': '#e02d3c',
+                            '--warning': '#d97706',
+                            '--success': '#3d9e52',
+                            '--shadow': '0 8px 32px rgba(0, 0, 0, 0.07)',
+                            '--transition': 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '--border-radius': '12px',
                             '--backdrop-blur': 'blur(12px)'
                         }
                     }
@@ -2088,6 +2301,9 @@
                             if (!parsed.character_book) {
                                 parsed.character_book = { name: '', description: '', entries: [] };
                             }
+                            if (parsed.temperature === undefined) parsed.temperature = 1.0;
+                            if (parsed.topP === undefined) parsed.topP = 1.0;
+                            if (parsed.maxTokens === undefined) parsed.maxTokens = 2048;
                             if (!parsed.customPrompts) {
                                 parsed.customPrompts = { ...defaultAIPrompts };
                             } else {
@@ -2734,7 +2950,10 @@
                             const res = await fetch(url, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + "\n\n" + promptMsg }] }] })
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: systemPrompt + "\n\n" + promptMsg }] }],
+                                    generationConfig: { temperature: settings.temperature, topP: settings.topP, maxOutputTokens: settings.maxTokens }
+                                })
                             });
                             if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Gemini error'); }
                             let full = '';
@@ -2758,7 +2977,7 @@
                             const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                                 method: 'POST',
                                 headers: { 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ model: settings.modelName, stream: true, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptMsg }] })
+                                body: JSON.stringify({ model: settings.modelName, stream: true, temperature: settings.temperature, top_p: settings.topP, max_tokens: settings.maxTokens, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptMsg }] })
                             });
                             if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'OpenRouter error'); }
                             let full = '';
@@ -2981,6 +3200,81 @@
                     scrollChat();
                 };
 
+                // --- v1.6 Functions ---
+
+                const commonTags = ['fantasy', 'sci-fi', 'romance', 'action', 'horror', 'slice-of-life', 'male', 'female', 'non-binary', 'human', 'elf', 'monster', 'original', 'fictional', 'historical', 'modern', 'NSFW', 'SFW', 'anime', 'realistic', 'mentor', 'rival', 'villain', 'hero', 'companion'];
+
+                const appendTag = (tag) => {
+                    const existing = (character.tags_input || '').trim();
+                    if (existing) {
+                        const tags = existing.split(',').map(t => t.trim());
+                        if (!tags.includes(tag)) character.tags_input = existing + ', ' + tag;
+                    } else {
+                        character.tags_input = tag;
+                    }
+                };
+
+                const doFindReplace = () => {
+                    if (!findText.value.trim()) return;
+                    const find = findText.value;
+                    const replace = replaceText.value;
+                    let count = 0;
+                    const replaceIn = (str) => {
+                        if (!str) return str;
+                        const after = str.split(find).join(replace);
+                        if (after !== str) count += str.split(find).length - 1;
+                        return after;
+                    };
+                    takeSnapshot();
+                    character.name = replaceIn(character.name);
+                    character.description = replaceIn(character.description);
+                    character.personality = replaceIn(character.personality);
+                    character.system_prompt = replaceIn(character.system_prompt);
+                    character.post_history_instructions = replaceIn(character.post_history_instructions);
+                    character.scenario = replaceIn(character.scenario);
+                    character.first_mes = replaceIn(character.first_mes);
+                    character.mes_example = replaceIn(character.mes_example);
+                    character.creator_notes = replaceIn(character.creator_notes);
+                    character.tags_input = replaceIn(character.tags_input);
+                    character.alternate_greetings = character.alternate_greetings.map(g => replaceIn(g));
+                    (character.character_book.entries || []).forEach(e => {
+                        e.content = replaceIn(e.content);
+                        e.keysStr = replaceIn(e.keysStr);
+                    });
+                    (character.extensions.categories || []).forEach(cat => {
+                        cat.name = replaceIn(cat.name);
+                        (cat.descriptors || []).forEach(d => { d.content = replaceIn(d.content); });
+                    });
+                    findReplaceCount.value = count;
+                };
+
+                const openExportPreview = () => {
+                    const data = getExportableChar().data;
+                    const name = character.name || 'Character';
+                    const rep = (s) => (s || '').replace(/\{\{char\}\}/gi, name).replace(/\{\{user\}\}/gi, 'User');
+                    exportPreviewData.value = {
+                        description: rep(data.description),
+                        first_mes: rep(data.first_mes),
+                        scenario: rep(data.scenario),
+                        mes_example: rep(data.mes_example),
+                        system_prompt: rep(data.system_prompt)
+                    };
+                    showExportPreview.value = true;
+                };
+
+                const startChatEdit = (index, msg) => {
+                    editingChatIndex.value = index;
+                    editingChatContent.value = msg;
+                };
+
+                const saveChatEdit = (index) => {
+                    if (index >= 0 && index < chatLog.value.length) {
+                        chatLog.value[index].content = editingChatContent.value;
+                    }
+                    editingChatIndex.value = -1;
+                    editingChatContent.value = '';
+                };
+
                 return {
                     activeTab, character, settings, showGallery, savedCharacters, showLibraryModal,
                     showRestoreModal, confirmRestore, cancelRestore,
@@ -3007,7 +3301,11 @@
                     pngImportInput, jsonImportInput, triggerPNGImport, triggerJSONImport,
                     handlePNGImport, handleJSONImport,
                     showDescParseModal, parseProgressPct, applyDescriptionAsDummy, parseDescriptionWithAI,
-                    regenerateLastResponse
+                    regenerateLastResponse,
+                    showFindReplace, findText, replaceText, findReplaceCount, doFindReplace,
+                    showExportPreview, exportPreviewData, openExportPreview,
+                    editingChatIndex, editingChatContent, startChatEdit, saveChatEdit,
+                    commonTags, appendTag
                 }
             }
         });

@@ -1,98 +1,111 @@
-# 🌌 DoubleBrace - AI Character Card Studio
+# DoubleBrace - AI Character Card Studio
 
-Welcome to **DoubleBrace**! 🎭 A powerful, responsive, and visually stunning web application designed to help you build, manage, and export AI roleplay characters compatible with the **V2 Character Card Specification**.
+**DoubleBrace** is a single-file web application for building, managing, and exporting AI roleplay characters compatible with the **V2 Character Card Specification** — no installation, no server, no build step. Just open `index.html` in your browser and start creating.
 
-Whether you're crafting a cyberpunk hacker, a fantasy knight, or a sci-fi captain, DoubleBrace provides a professional laboratory environment—powered by an intuitive glassmorphism UI and AI-assisted generation! ✨
+Craft any character: organize traits and lore in a visual node tree, hook up your **OpenRouter or Gemini API key** to generate descriptions and dialogue with AI, test your character's voice in the built-in chat, then export a ready-to-use V2 PNG card.
 
-**TRY IT HERE:** [https://macegac.github.io/DoubleBrace/](https://macegac.github.io/DoubleBrace/)
+**Live Demo:** [https://macegac.github.io/DoubleBrace/](https://macegac.github.io/DoubleBrace/)
 
 ---
 
-## ✨ Features
+## Features
 
-### 🗂️ Advanced Node-Based Descriptions
-- Organize character traits, physical features, and lore using a highly visual accordion node system. 🧩
+### Node-Based Descriptions
+- Organize character traits, physical features, and lore using an accordion node system.
 - Group descriptors into **Categories** for clean, manageable character structures.
-- Easily add, rename, or reorder nodes via drag-and-drop!
+- Add, rename, and reorder nodes via **drag-and-drop**.
+- Save your best categories or descriptors to the **Description Library** and reuse them across characters.
 
-### 📖 Integrated Lorebooks
-- Build deep, context-aware backgrounds using the native Lorebook builder. 📜
-- Link entries to **Keywords** which cleanly export as standard string arrays.
-- Includes insertion order controls and `{{char}}` / `{{user}}` macro tools for AI perfection.
-- **Advanced Lorebook Fields:** Control entry **Position** (before/after char def or author note), **Depth**, **Regex** keyword matching, and per-entry **Enable/Disable** toggles.
+### Integrated Lorebooks
+- Build deep, context-aware backgrounds using the native Lorebook builder.
+- Link entries to **Keywords** which export as standard string arrays.
+- `{{char}}` / `{{user}}` macro tools for AI-ready content.
+- **Advanced Fields:** Control entry **Position** (before/after char def or author note), **Depth**, **Regex** keyword matching, and per-entry enable/disable toggles.
 - **Lorebook Search:** Instantly filter entries by name, keyword, or content.
 
-### 🌍 Global Info & Full V2 Compatibility
-- Fill out all standard V2 fields: **First Message, Alternate Greetings, Scenario, Example Dialogs, Creator Notes, and Tags**. 📝
-- **Personality Summary:** A plain-text personality field separate from the main description, fully exported in the V2 spec.
+### Global Info & Full V2 Compatibility
+- Fill out all standard V2 fields: **First Message, Alternate Greetings, Scenario, Example Dialogs, Creator Notes, Tags**.
+- **Personality Summary:** Plain-text personality field, fully exported in the V2 spec.
 - **System Prompt:** Inject system-level instructions before the conversation, with AI generation support.
-- **Post History Instructions:** Add instructions at the jailbreak position (after chat history), with macro support.
+- **Post History Instructions:** Add instructions at the jailbreak position (after chat history).
 - **Card Metadata:** Set a `character_version` string for tracking card revisions.
-- **Alternate Greetings Manager:** Recursively add as many fallback greetings as you need!
-- **Macro Buttons:** Smart macro insertion buttons that respect your cursor position in textareas. ⚡
+- **Macro Buttons:** Smart macro insertion buttons that respect your cursor position.
 
-### 🤖 Built-in AI Generation
-- Connect your **OpenRouter** or **Gemini** API keys directly in the Options tab! 🔑
-- **Streaming Responses:** AI output streams in real-time token by token — no more waiting for the full response to appear.
-- **Lightning Bolt (⚡) Icons:** Click to have the AI write descriptors, scenarios, system prompts, or greetings based on the character's existing context.
-- **Custom AI Prompts:** Fully customize the system instructions used for every type of AI generation in the Settings tab.
+### Built-in AI Generation
+- Connect your **OpenRouter** or **Gemini** API keys in the Settings tab.
+- **Streaming Responses:** AI output streams in real-time, token by token.
+- **AI Bolt Icons:** Click to have the AI write descriptors, scenarios, system prompts, or greetings based on the character's existing context.
+- **Custom AI Prompts:** Fully customize the system instructions used for every type of AI generation.
+- **Sampler Settings:** Tune **Temperature**, **Top-P**, and **Max Tokens** directly from the Settings tab to control output creativity and length.
+- **Test Connection:** Verify your API key and model are working with a one-click connection test — shows success or error feedback inline.
 
-### 💬 ChitChat: In-App Testing
-- **Live Interaction:** Chat with your character directly inside the app to test their personality, scenario, and speech patterns before exporting! 🗣️
-- **Real-time Streaming:** Watch the character's response appear word by word, just like a real AI frontend.
-- **Regenerate:** Re-roll the last character response with a single click without retyping your message.
-- **Persistent Chat History:** Conversations are saved per-character to IndexedDB and restored automatically when you return.
+### ChitChat: In-App Testing
+- **Live Interaction:** Chat with your character directly inside the app to test personality and voice before exporting.
+- **Real-time Streaming:** Watch responses appear word by word.
+- **Regenerate:** Re-roll the last character response with a single click.
+- **Edit Messages:** Click the pencil icon on any message to edit it inline. Confirm with Ctrl+Enter or cancel with Escape.
+- **Delete Messages:** Remove any individual message from the chat history with the trash icon.
+- **Persistent Chat History:** Conversations are saved per-character to IndexedDB and restored automatically.
 
-### 🧪 Experimental: Auto Character Generator
-- Provide a name and a short prompt (e.g., "A grumpy space pirate who loves space cats"), and the AI will auto-generate an entire categorized character profile from scratch! 🤯
+### Auto Character Generator (Experimental)
+- Provide a name and a short prompt, and the AI auto-generates a complete, categorized character profile from scratch.
 
-### 📥 PNG & JSON Import
-- **Import Character PNGs:** Open any V2-spec character card PNG — DoubleBrace reads the embedded metadata and loads the full character into your workspace, including the avatar image.
+### PNG & JSON Import
+- **Import Character PNGs:** Reads the embedded V2 metadata and loads the full character, including the avatar image.
 - **Import Character JSON:** Load raw V2 character card JSON files directly.
-- **Smart Description Handling:** Cards from other tools that use a flat description field (no category tree) are handled gracefully:
-  - **Without AI:** The description is automatically placed into a single "Description" category and descriptor, ready to edit.
-  - **With AI:** You're offered the option to have the AI intelligently parse and segment the description into meaningful categories and descriptors. An animated progress bar with live percentage tracks the parsing in real time.
+- **Smart Description Handling:** Cards from other tools with a flat description field can be imported as-is, or parsed by AI into proper categories and descriptors — with a live animated progress bar.
 
-### 🔢 Per-Field Token Counter
-- Every major text field (First Message, Scenario, Example Dialog, System Prompt, etc.) displays a live **token estimate** just above the textarea.
-- Color-coded for quick budget awareness: normal → **yellow** (500+ tokens) → **red** (1000+ tokens).
+### Per-Field Token Counter
+- Every major text field shows a live **token estimate**.
+- Color-coded: normal → yellow (500+ tokens) → red (1000+ tokens).
 - The **Raw Output** modal shows the total compiled token count for the entire card.
-- The **Descriptions tab** shows a live token estimate across all categories and descriptors.
+- The **Descriptions tab** shows a running total across all categories and descriptors.
 
-### ↩️ Undo / Redo
-- A **20-step undo stack** protects all destructive actions: AI generation, node deletion, gallery loads, and imports.
-- **Ctrl+Z** to undo, **Ctrl+Y** or **Ctrl+Shift+Z** to redo.
-- Undo and Redo buttons are also available in the Quick Actions bar.
+### Undo / Redo
+- **20-step undo stack** covering AI generation, node deletion, gallery loads, and imports.
+- **Ctrl+Z** to undo, **Ctrl+Y** / **Ctrl+Shift+Z** to redo.
+- Undo and Redo buttons are also in the Quick Actions bar.
 
-### 📚 The Library System
-- Save your best categories or individual descriptors to your local **Library**! 📖
-- Reuse them across different characters with a single click.
-- Everything is saved locally via IndexedDB for privacy and speed. 🔒
+### The Library System
+- Save categories or individual descriptors to your local **Library**.
+- Reuse them across characters with a single click.
+- Stored locally in IndexedDB — private and fast.
 
-### 🎨 Stunning Neon Glassmorphism UI
-- **Dark Nebula & Light Aurora:** Switch between two beautiful default themes or create your own. 📱💻
-- **Custom Theme Engine:** Tweak every CSS variable (colors, gradients, blurs) on the fly, then save, export, or import your custom designs! 🌈
+### Dark Veldt & Sage Light Themes
+- **Dark Veldt:** Deep charcoal with forest green tones and a bright lime accent — the new default dark theme. Inspired by a professional dark dashboard aesthetic.
+- **Sage Light:** Clean off-white with natural sage green accents — the new default light theme.
+- **Custom Theme Engine:** Tweak every CSS variable (colors, gradients, blurs, border radius) live in the Settings tab, then save, export, or import your custom designs.
+- Typography powered by **Space Grotesk** — a geometric, modern typeface with excellent number rendering.
 
-### 💾 Save, Load & Export
-- **Local Gallery:** Quick-save your characters to the built-in gallery with support for duplication and deletion. 🖼️
-- **Gallery Search:** Filter your saved characters by name, tag, or creator instantly.
-- **Workspace Restoration:** Never lose work! The app automatically saves your active workspace and prompts to restore it if you refresh or close the tab. 🔄
-- **Raw JSON & Token Count:** View the raw JSON export with an integrated **Token Counter** to estimate character size. 📋
-- **V2 PNG Generation:** Upload a character avatar and magically export a standard V2 Character Card PNG with the metadata embedded directly inside the image! 🪄🖼️
+### Find & Replace
+- Search across all character text fields (descriptions, lorebook, prompts) and replace in one action.
+- Leave the replacement field empty to delete all matches.
+- Shows a count of replacements made, or a "no matches" notice.
+
+### Card Preview
+- Preview the fully compiled card output before exporting — `{{char}}` is substituted with the actual character name so you can read it exactly as an AI frontend would receive it.
+- Shows Description, First Message, Scenario, Example Dialogs, and System Prompt sections.
+- Jump straight to Raw JSON or Export PNG from the preview modal.
+
+### Save, Load & Export
+- **Local Gallery:** Quick-save characters with support for duplication and deletion.
+- **Gallery Search:** Filter saved characters by name, tag, or creator instantly.
+- **Default Author:** Set a global author name in Settings that is automatically applied to all exported cards.
+- **Workspace Restoration:** The app auto-saves your active workspace and prompts to restore it on reload.
+- **Raw JSON & Token Count:** View the raw JSON export with an integrated token counter.
+- **V2 PNG Generation:** Upload a character avatar and export a V2 Character Card PNG with metadata embedded directly inside the image.
 
 ---
 
-## 🚀 How to Use
+## How to Use
 
-1. **Open the App:** Simply open `index.html` in your modern web browser. 🌐
-2. **Setup AI (Optional):** Go to the ⚙️ **Settings** tab, enable AI features, and plug in your API key to unlock generation features.
-3. **Build or Import:** Use the 📝 **Descriptions** and 🌍 **Global Info** tabs to craft your character, or import an existing PNG/JSON card from the Quick Actions bar.
-4. **Test:** Use the 💬 **ChitChat** tab to verify the character's voice.
-5. **Export:** Open the hamburger menu (🍔) and click **Generate PNG** or **Raw Output** to take your character to your favorite AI frontend (like SillyTavern)!
+1. **Open:** Open `index.html` in any modern web browser — no server needed.
+2. **Setup AI (Optional):** Go to the **Settings** tab, enable AI features, and add your API key.
+3. **Build or Import:** Use the **Descriptions** and **Global Info** tabs to craft your character, or import an existing PNG/JSON from the Quick Actions bar.
+4. **Test:** Use the **ChitChat** tab to verify the character's voice.
+5. **Export:** Click **Generate PNG** or **Raw Output** in the Quick Actions bar to take your character to your favorite AI frontend (e.g., SillyTavern).
 
 ---
 
-## 📱 Progressive Web App (PWA)
-DoubleBrace is PWA-ready! On most mobile browsers, you can "Add to Home Screen" to use it as a standalone app with its own icon and offline capabilities.
-
-Enjoy bringing your characters to life! 🎭✨
+## Progressive Web App (PWA)
+DoubleBrace is PWA-ready. On most mobile browsers, use "Add to Home Screen" for a standalone app experience with its own icon and offline capabilities.
