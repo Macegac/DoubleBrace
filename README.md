@@ -71,6 +71,14 @@ Craft any character: organize traits and lore in a visual node tree, hook up you
 - Reuse them across characters with a single click.
 - Stored locally in IndexedDB — private and fast.
 
+### Accessibility
+- **Dyslexia-Friendly Font:** Switches the entire app to [OpenDyslexic](https://opendyslexic.org/) — covers all inputs, textareas, and buttons.
+- **Increased Spacing:** Wider line height, letter spacing, and word spacing across all text areas. Works well alongside the dyslexic font.
+- **Large Text:** Bumps the base font size up across the entire app.
+- **High Contrast:** Stronger borders, brighter muted text, and visible focus rings for keyboard navigation.
+- **Reduce Motion:** Disables all transitions and animations — recommended for motion sensitivity or vestibular disorders.
+- All accessibility settings persist across sessions.
+
 ### Dark Veldt & Sage Light Themes
 - **Dark Veldt:** Deep charcoal with forest green tones and a bright lime accent — the new default dark theme. Inspired by a professional dark dashboard aesthetic.
 - **Sage Light:** Clean off-white with natural sage green accents — the new default light theme.

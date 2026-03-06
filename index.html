@@ -23,6 +23,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- OpenDyslexic (loaded always, applied conditionally) -->
+    <link href="https://fonts.cdnfonts.com/css/opendyslexic" rel="stylesheet">
     <link rel="icon" type="image/png" href="logo.png">
 
     <style>
@@ -674,6 +676,53 @@
         }
 
         /* Mobile Layout */
+        /* ── Accessibility Modes ────────────────────────────────── */
+        body.a11y-dyslexic,
+        body.a11y-dyslexic input,
+        body.a11y-dyslexic textarea,
+        body.a11y-dyslexic button,
+        body.a11y-dyslexic select,
+        body.a11y-dyslexic .node-textarea,
+        body.a11y-dyslexic .char-name-input {
+            font-family: 'OpenDyslexic', sans-serif !important;
+        }
+
+        body.a11y-reduced-motion *,
+        body.a11y-reduced-motion *::before,
+        body.a11y-reduced-motion *::after {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        body.a11y-large-text {
+            font-size: 19px;
+        }
+
+        body.a11y-spacing,
+        body.a11y-spacing input,
+        body.a11y-spacing textarea,
+        body.a11y-spacing .node-textarea {
+            line-height: 1.9 !important;
+            letter-spacing: 0.04em !important;
+            word-spacing: 0.12em !important;
+        }
+
+        body.a11y-high-contrast {
+            --border-color: rgba(168, 232, 67, 0.35) !important;
+            --text-muted: #8abf8a !important;
+            --surface-color: rgba(168, 232, 67, 0.07) !important;
+        }
+
+        body.a11y-high-contrast .node-container {
+            border-left-width: 3px !important;
+            border-left-color: rgba(168, 232, 67, 0.5) !important;
+        }
+
+        body.a11y-high-contrast *:focus-visible {
+            outline: 3px solid var(--accent-purple) !important;
+            outline-offset: 3px !important;
+        }
+
         @media (max-width: 600px) {
             header {
                 padding: 0.5rem;
@@ -1374,6 +1423,69 @@
                         </div>
                     </accordion-node>
                 </div>
+
+                <div style="margin-top: 1rem;">
+                    <accordion-node title="Accessibility" theme="purple">
+                        <div style="display:flex; flex-direction:column; gap:1rem;">
+
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+                                <div>
+                                    <div style="color:white; font-size:0.9rem; font-weight:500;">Dyslexia-Friendly Font</div>
+                                    <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem;">Switches to OpenDyslexic — a typeface designed to improve readability for people with dyslexia.</div>
+                                </div>
+                                <label class="switch" style="flex-shrink:0;">
+                                    <input type="checkbox" v-model="settings.accessibility.dyslexicFont">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+                                <div>
+                                    <div style="color:white; font-size:0.9rem; font-weight:500;">Increased Spacing</div>
+                                    <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem;">Wider line height, letter spacing, and word spacing across all text areas. Also helps with dyslexia.</div>
+                                </div>
+                                <label class="switch" style="flex-shrink:0;">
+                                    <input type="checkbox" v-model="settings.accessibility.spacing">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+                                <div>
+                                    <div style="color:white; font-size:0.9rem; font-weight:500;">Large Text</div>
+                                    <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem;">Increases the base font size across the entire app.</div>
+                                </div>
+                                <label class="switch" style="flex-shrink:0;">
+                                    <input type="checkbox" v-model="settings.accessibility.largeText">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+                                <div>
+                                    <div style="color:white; font-size:0.9rem; font-weight:500;">High Contrast</div>
+                                    <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem;">Boosts border visibility, brightens muted text, and adds strong focus rings for keyboard navigation.</div>
+                                </div>
+                                <label class="switch" style="flex-shrink:0;">
+                                    <input type="checkbox" v-model="settings.accessibility.highContrast">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+                                <div>
+                                    <div style="color:white; font-size:0.9rem; font-weight:500;">Reduce Motion</div>
+                                    <div style="color:var(--text-muted); font-size:0.78rem; margin-top:0.2rem;">Disables all transitions and animations. Recommended for motion sensitivity or vestibular disorders.</div>
+                                </div>
+                                <label class="switch" style="flex-shrink:0;">
+                                    <input type="checkbox" v-model="settings.accessibility.reducedMotion">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                        </div>
+                    </accordion-node>
+                </div>
             </div>
         </main>
 
@@ -2042,6 +2154,13 @@
                     experimental: {
                         autoCharacter: false
                     },
+                    accessibility: {
+                        dyslexicFont: false,
+                        reducedMotion: false,
+                        largeText: false,
+                        spacing: false,
+                        highContrast: false,
+                    },
                     customPrompts: { ...defaultAIPrompts }
                 });
 
@@ -2304,6 +2423,9 @@
                             if (parsed.temperature === undefined) parsed.temperature = 1.0;
                             if (parsed.topP === undefined) parsed.topP = 1.0;
                             if (parsed.maxTokens === undefined) parsed.maxTokens = 2048;
+                            if (!parsed.accessibility) {
+                                parsed.accessibility = { dyslexicFont: false, reducedMotion: false, largeText: false, spacing: false, highContrast: false };
+                            }
                             if (!parsed.customPrompts) {
                                 parsed.customPrompts = { ...defaultAIPrompts };
                             } else {
@@ -2317,6 +2439,7 @@
                             Object.assign(settings, parsed);
                         } catch (e) { }
                     }
+                    applyAccessibility();
 
                     // Check for unsaved workspace
                     const savedWorkspace = localStorage.getItem('charaCreatorWorkspace');
@@ -2348,6 +2471,17 @@
                 watch(settings, () => {
                     localStorage.setItem('charaCreatorSettings', JSON.stringify(settings));
                 }, { deep: true });
+
+                const applyAccessibility = () => {
+                    const b = document.body;
+                    const a = settings.accessibility;
+                    b.classList.toggle('a11y-dyslexic', !!a.dyslexicFont);
+                    b.classList.toggle('a11y-reduced-motion', !!a.reducedMotion);
+                    b.classList.toggle('a11y-large-text', !!a.largeText);
+                    b.classList.toggle('a11y-spacing', !!a.spacing);
+                    b.classList.toggle('a11y-high-contrast', !!a.highContrast);
+                };
+                watch(() => settings.accessibility, applyAccessibility, { deep: true });
 
                 watch(character, () => {
                     if (!showRestoreModal.value) {
@@ -3282,7 +3416,7 @@
                     showAutoCharModal, autoCharData, autoGenerateCharacter,
                     library, librarySearch, filteredLibrary, imageUploadInput, themeUploadInput,
                     chatLog, chatInput, isChatGenerating,
-                    savedThemes, currentThemeVars, applyTheme, debouncedApplyTheme,
+                    savedThemes, currentThemeVars, applyTheme, debouncedApplyTheme, applyAccessibility,
                     saveCustomTheme, deleteCustomTheme, exportTheme, importTheme,
                     connectionStatus, isTestingAI, isGenerating,
                     triggerImageUpload, handleImageUpload,
