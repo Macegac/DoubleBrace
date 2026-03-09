@@ -50,9 +50,10 @@ Craft any character: organize traits and lore in a visual node tree, hook up you
 ### Auto Character Generator (Experimental)
 - Provide a name and a short prompt, and the AI auto-generates a complete, categorized character profile from scratch.
 
-### PNG & JSON Import
+### PNG, JSON & Chub Import
 - **Import Character PNGs:** Reads the embedded V2 metadata and loads the full character, including the avatar image.
 - **Import Character JSON:** Load raw V2 character card JSON files directly.
+- **Import from Chub:** Paste a `chub.ai/characters/author/name` URL in the Quick Actions bar and the card is fetched and loaded instantly — no download or account required.
 - **Smart Description Handling:** Cards from other tools with a flat description field can be imported as-is, or parsed by AI into proper categories and descriptors — with a live animated progress bar.
 
 ### Per-Field Token Counter
@@ -109,7 +110,7 @@ Craft any character: organize traits and lore in a visual node tree, hook up you
 
 1. **Open:** Open `index.html` in any modern web browser — no server needed.
 2. **Setup AI (Optional):** Go to the **Settings** tab, enable AI features, and add your API key.
-3. **Build or Import:** Use the **Descriptions** and **Global Info** tabs to craft your character, or import an existing PNG/JSON from the Quick Actions bar.
+3. **Build or Import:** Use the **Descriptions** and **Global Info** tabs to craft your character, or import an existing PNG/JSON — or paste a Chub URL — from the Quick Actions bar.
 4. **Test:** Use the **ChitChat** tab to verify the character's voice.
 5. **Export:** Click **Generate PNG** or **Raw Output** in the Quick Actions bar to take your character to your favorite AI frontend (e.g., SillyTavern).
 

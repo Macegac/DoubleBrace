@@ -837,6 +837,10 @@
                     <i class="fas fa-file-code"></i>
                     <span>Import JSON</span>
                 </button>
+                <button class="action-item" @click="showChubModal = true">
+                    <i class="fas fa-cloud-download-alt"></i>
+                    <span>Import Chub</span>
+                </button>
                 <button class="action-item" @click="undo" :style="{opacity: undoStack.length === 0 ? 0.35 : 1}" :disabled="undoStack.length === 0" title="Undo (Ctrl+Z)">
                     <i class="fas fa-undo"></i>
                     <span>Undo</span>
@@ -1511,6 +1515,28 @@
                     <button class="primary-btn" @click="copyRawOutput"><i class="fas fa-copy"></i> Copy</button>
                     <button class="primary-btn" @click="downloadJSON"><i class="fas fa-download"></i> Download</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Chub Import Modal -->
+        <div v-if="showChubModal" class="overlay" @click.self="showChubModal = false">
+            <div class="overlay-content" style="max-width: 480px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;"><i class="fas fa-cloud-download-alt" style="color:var(--accent); margin-right:0.5rem;"></i>Import from Chub</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" :disabled="chubLoading" @click="showChubModal = false"><i class="fas fa-times"></i></button>
+                </div>
+                <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem;">Paste a chub.ai character URL to import the card directly — no download needed.</p>
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                    <input v-model="chubUrlInput" type="text" class="form-control" placeholder="https://chub.ai/characters/author/name"
+                        style="flex:1;" :disabled="chubLoading"
+                        @keydown.enter="importFromChub" />
+                    <button class="primary-btn" @click="importFromChub" :disabled="chubLoading || !chubUrlInput.trim()"
+                        style="white-space:nowrap; min-width:80px;">
+                        <i :class="chubLoading ? 'fas fa-spinner fa-spin' : 'fas fa-download'"></i>
+                        {{ chubLoading ? 'Loading…' : 'Import' }}
+                    </button>
+                </div>
+                <p style="color:var(--text-secondary); font-size:0.78rem; opacity:0.7;">Fetches via <code>avatars.charhub.io</code> CDN — no account required.</p>
             </div>
         </div>
 
@@ -2732,6 +2758,48 @@
                     event.target.value = null;
                 };
 
+                // ─── Chub Import ──────────────────────────────────────────────────────
+                const showChubModal = ref(false);
+                const chubUrlInput = ref('');
+                const chubLoading = ref(false);
+
+                const importFromChub = async () => {
+                    const input = chubUrlInput.value.trim();
+                    if (!input) return;
+                    const m = input.match(/chub\.ai\/characters\/([^?#\s]+)/);
+                    const fullPath = m ? m[1].trim() : (input.includes('/') && !input.includes(' ') ? input : null);
+                    if (!fullPath) { alert('Could not parse Chub URL — paste the full character page URL.'); return; }
+
+                    chubLoading.value = true;
+                    try {
+                        const cdnUrl = `https://avatars.charhub.io/avatars/${fullPath}/chara_card_v2.png`;
+                        let resp = await fetch(cdnUrl).catch(() => null);
+                        if (!resp || !resp.ok) {
+                            resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(cdnUrl)}`);
+                        }
+                        if (!resp.ok) throw new Error(`CDN returned ${resp.status}`);
+
+                        const bytes = new Uint8Array(await resp.arrayBuffer());
+                        const cardData = readPNGMetadata(bytes);
+                        if (!cardData) throw new Error('No character card data found in this PNG.');
+
+                        const imageDataUrl = await new Promise(resolve => {
+                            const blob = new Blob([bytes], { type: 'image/png' });
+                            const reader = new FileReader();
+                            reader.onload = e => resolve(e.target.result);
+                            reader.readAsDataURL(blob);
+                        });
+
+                        showChubModal.value = false;
+                        chubUrlInput.value = '';
+                        applyImportedCard(cardData, imageDataUrl);
+                    } catch (err) {
+                        alert('Import failed: ' + err.message);
+                    } finally {
+                        chubLoading.value = false;
+                    }
+                };
+
                 const regenerateLastResponse = async () => {
                     if (chatLog.value.length === 0 || isChatGenerating.value) return;
                     const last = chatLog.value[chatLog.value.length - 1];
@@ -3434,6 +3502,7 @@
                     countTokens,
                     pngImportInput, jsonImportInput, triggerPNGImport, triggerJSONImport,
                     handlePNGImport, handleJSONImport,
+                    showChubModal, chubUrlInput, chubLoading, importFromChub,
                     showDescParseModal, parseProgressPct, applyDescriptionAsDummy, parseDescriptionWithAI,
                     regenerateLastResponse,
                     showFindReplace, findText, replaceText, findReplaceCount, doFindReplace,
