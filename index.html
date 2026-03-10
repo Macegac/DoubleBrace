@@ -2773,26 +2773,52 @@
                     chubLoading.value = true;
                     try {
                         const cdnUrl = `https://avatars.charhub.io/avatars/${fullPath}/chara_card_v2.png`;
-                        let resp = await fetch(cdnUrl).catch(() => null);
-                        if (!resp || !resp.ok) {
-                            resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(cdnUrl)}`);
+
+                        // Stream the response and parse PNG chunks as they arrive.
+                        // Cancels the download as soon as the tEXt/chara chunk is decoded —
+                        // avoids downloading the full image (which can be several MB).
+                        // Uses a plain GET with no custom headers so no CORS preflight is needed.
+                        const streamReadMetadata = async (url) => {
+                            const ctrl = new AbortController();
+                            const tid = setTimeout(() => ctrl.abort(), 15000);
+                            let resp;
+                            try { resp = await fetch(url, { signal: ctrl.signal }); }
+                            finally { clearTimeout(tid); }
+                            if (!resp.ok || !resp.body) return null;
+                            const reader = resp.body.getReader();
+                            const chunks = [];
+                            let totalLen = 0;
+                            let result = null;
+                            try {
+                                while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+                                    chunks.push(value);
+                                    totalLen += value.length;
+                                    // Assemble received bytes and attempt parse
+                                    const buf = new Uint8Array(totalLen);
+                                    let pos = 0;
+                                    for (const c of chunks) { buf.set(c, pos); pos += c.length; }
+                                    result = readPNGMetadata(buf);
+                                    if (result || totalLen > 524288) break; // stop at 512KB max
+                                }
+                            } finally {
+                                reader.cancel(); // abort remaining download
+                            }
+                            return result;
+                        };
+
+                        let cardData = await streamReadMetadata(cdnUrl).catch(() => null);
+                        if (!cardData) {
+                            cardData = await streamReadMetadata(
+                                `https://corsproxy.io/?${encodeURIComponent(cdnUrl)}`
+                            ).catch(() => null);
                         }
-                        if (!resp.ok) throw new Error(`CDN returned ${resp.status}`);
-
-                        const bytes = new Uint8Array(await resp.arrayBuffer());
-                        const cardData = readPNGMetadata(bytes);
-                        if (!cardData) throw new Error('No character card data found in this PNG.');
-
-                        const imageDataUrl = await new Promise(resolve => {
-                            const blob = new Blob([bytes], { type: 'image/png' });
-                            const reader = new FileReader();
-                            reader.onload = e => resolve(e.target.result);
-                            reader.readAsDataURL(blob);
-                        });
+                        if (!cardData) throw new Error('No character card data found. The card may not be published on the CDN yet.');
 
                         showChubModal.value = false;
                         chubUrlInput.value = '';
-                        applyImportedCard(cardData, imageDataUrl);
+                        applyImportedCard(cardData, cdnUrl);
                     } catch (err) {
                         alert('Import failed: ' + err.message);
                     } finally {
@@ -3090,6 +3116,7 @@
                             return;
                         }
                         const img = new Image();
+                        if (!dataUrl.startsWith('data:')) img.crossOrigin = 'anonymous';
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
                             canvas.width = img.width;
