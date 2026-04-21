@@ -47,6 +47,18 @@ Craft any character: organize traits and lore in a visual node tree, hook up you
 - **Delete Messages:** Remove any individual message from the chat history with the trash icon.
 - **Persistent Chat History:** Conversations are saved per-character to IndexedDB and restored automatically.
 
+### Persona ER — Emergency Voice Repair
+Characters built across multiple AI sessions, imported from other tools, or heavily edited over time often develop a flat, generic voice — full of adjective lists, passive trait summaries, and AI tells like "it's important to note" or "as an AI." Persona ER strips that out and gives the character a facelift, rewriting them in their own authentic first-person voice so they actually *feel* like someone, not a product spec.
+
+- **Descriptor-level rewrite:** Select individual category descriptors to rewrite. Each one is converted to a short Ali:Chat-style Q&A where the character answers in their own voice — behavioral specifics, not trait labels.
+- **Field repair:** Optionally rewrite top-level fields (personality, first message, scenario, example dialogue) in the same pass — all tuned to authentic voice, sensory detail, and the character's speech rhythm.
+- **Voice Interview category:** Every ER run generates a new **✦ Persona Voice Profile** category prepended to the card. An interviewer asks the character "tell me about yourself" questions and the character answers in first person. This block anchors the model to the character's voice at the top of the card — it sets the tone for every response and doubles as a visible marker that the card has had ER treatment.
+- **AI ism blocklist:** A configurable list of phrases to strip — defaults include "data collected," "analysis concluded," "as an AI," "of course," and other model tells. Add your own.
+- **Review before apply:** Every rewritten field is shown side-by-side (before/after) in a review step. Accept or reject individual results before anything is committed. Full undo support.
+- **Customizable prompts:** All three ER prompt templates (field repair, descriptor rewrite, voice interview) are exposed in the Settings tab so you can tune the technique to your preferred style or model.
+
+> Persona ER is most useful for characters that respond generically, break character easily, or feel like they were written by a committee. Give them one ER pass and the difference is immediate.
+
 ### Auto Character Generator (Experimental)
 - Provide a name and a short prompt, and the AI auto-generates a complete, categorized character profile from scratch.
 

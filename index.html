@@ -857,6 +857,10 @@
                     <i class="fas fa-eye"></i>
                     <span>Preview</span>
                 </button>
+                <button v-if="settings.aiEnabled" class="action-item" @click="showRepairModal = true" title="Repair Character Voice">
+                    <i class="fas fa-stethoscope" style="color: var(--danger);"></i>
+                    <span>Persona ER</span>
+                </button>
             </div>
         </div>
 
@@ -1379,6 +1383,36 @@
                             <textarea class="node-textarea mt-1" v-model="settings.customPrompts.lorebook"
                                 style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
                         </div>
+                        <div
+                            style="margin-bottom: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color)">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Persona ER Voice Repair</label>
+                                <button class="node-btn warning" @click="resetPrompt('persona_repair')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.persona_repair"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                        <div
+                            style="margin-bottom: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color)">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Persona ER — Descriptor Rewrite</label>
+                                <button class="node-btn warning" @click="resetPrompt('persona_repair_descriptor')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.persona_repair_descriptor"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
+                        <div
+                            style="margin-bottom: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color)">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label style="color:white; font-size: 0.85rem; font-weight: 500;">Persona ER — Voice Interview</label>
+                                <button class="node-btn warning" @click="resetPrompt('persona_repair_interview')"
+                                    title="Reset to Default"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <textarea class="node-textarea mt-1" v-model="settings.customPrompts.persona_repair_interview"
+                                style="background: rgba(0,0,0,0.2); padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"></textarea>
+                        </div>
                     </accordion-node>
                 </div>
 
@@ -1675,6 +1709,127 @@
                             :class="isGenerating === 'autoCharacter' ? 'fa-spinner fa-spin' : 'fa-magic'"></i>
                         {{ isGenerating === 'autoCharacter' ? 'Generating...' : 'Generate Profile' }}
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Persona ER Modal -->
+        <div v-if="showRepairModal" class="overlay" @click.self="closeRepairModal">
+            <div class="overlay-content" style="max-width: 820px; width: 95%;">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1rem; align-items:center;">
+                    <h3 style="margin:0;"><i class="fas fa-stethoscope" style="margin-right:0.5rem; color:var(--danger);"></i>Persona ER — Voice Repair</h3>
+                    <button class="icon-btn" style="width:24px;height:24px;" @click="closeRepairModal"><i class="fas fa-times"></i></button>
+                </div>
+
+                <!-- Phase: config -->
+                <div v-if="repairPhase === 'config'" style="max-height:75vh; overflow-y:auto; padding-right:0.25rem;">
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Select the descriptors and fields to rewrite in authentic Ali:Chat voice — stripping AI tells, fixing negation framing, grounding traits in behavior.</p>
+
+                    <!-- Category / Descriptor tree -->
+                    <div v-if="character.extensions.categories.length > 0" style="margin-bottom:1.25rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <label style="font-size:0.85rem; font-weight:500; color:white;">Descriptors</label>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="node-btn" style="font-size:0.75rem; padding:0.15rem 0.5rem;" @click="character.extensions.categories.forEach(c => c.descriptors.forEach(d => { if(d.content && d.content.trim()) repairDescriptorSelection[d.id] = true; }))">All</button>
+                                <button class="node-btn" style="font-size:0.75rem; padding:0.15rem 0.5rem;" @click="character.extensions.categories.forEach(c => c.descriptors.forEach(d => repairDescriptorSelection[d.id] = false))">None</button>
+                            </div>
+                        </div>
+                        <div v-for="cat in character.extensions.categories" :key="cat.id" style="margin-bottom:0.5rem; border:1px solid var(--border-color); border-radius:6px; overflow:hidden;">
+                            <div style="background:rgba(255,255,255,0.04); padding:0.4rem 0.75rem; font-size:0.8rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">
+                                {{ cat.name }}
+                            </div>
+                            <div style="padding:0.35rem 0.75rem;">
+                                <div v-if="cat.descriptors.length === 0" style="font-size:0.78rem; color:var(--text-muted); font-style:italic; padding:0.25rem 0;">No descriptors</div>
+                                <label v-for="desc in cat.descriptors" :key="desc.id"
+                                    :title="!(desc.content && desc.content.trim()) ? 'Descriptor is empty' : ''"
+                                    :style="{display:'flex', alignItems:'flex-start', gap:'0.5rem', padding:'0.3rem 0', opacity: (desc.content && desc.content.trim()) ? 1 : 0.4, cursor: (desc.content && desc.content.trim()) ? 'pointer' : 'not-allowed', borderBottom:'1px solid rgba(255,255,255,0.04)'}">
+                                    <input type="checkbox" v-model="repairDescriptorSelection[desc.id]" :disabled="!(desc.content && desc.content.trim())" style="margin-top:3px; flex-shrink:0;">
+                                    <span style="flex:1; min-width:0;">
+                                        <span style="font-size:0.82rem; color:white;">{{ desc.name }}</span>
+                                        <span v-if="desc.content && desc.content.trim()" style="display:block; font-size:0.73rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ desc.content.slice(0, 80) }}{{ desc.content.length > 80 ? '…' : '' }}</span>
+                                        <span v-else style="display:block; font-size:0.72rem; color:var(--text-muted); font-style:italic;">empty</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else style="margin-bottom:1.25rem; font-size:0.82rem; color:var(--text-muted); font-style:italic;">No categories/descriptors found on this character.</div>
+
+                    <!-- Other fields -->
+                    <div style="margin-bottom:1.25rem;">
+                        <label style="font-size:0.85rem; font-weight:500; color:white; display:block; margin-bottom:0.5rem;">Other Fields</label>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap:0.4rem;">
+                            <template v-for="(val, key) in repairFieldSelection" :key="key">
+                                <label
+                                    :title="!(character[key] && character[key].trim()) ? 'Field is empty — add content first' : ''"
+                                    :style="{opacity: (character[key] && character[key].trim()) ? 1 : 0.4, cursor: (character[key] && character[key].trim()) ? 'pointer' : 'not-allowed', display:'flex', alignItems:'flex-start', gap:'0.4rem', fontSize:'0.82rem', padding:'0.3rem 0'}">
+                                    <input type="checkbox" v-model="repairFieldSelection[key]" :disabled="!(character[key] && character[key].trim())" style="margin-top:2px;">
+                                    <span>
+                                        {{ key.replace(/_/g, ' ') }}
+                                        <span v-if="!(character[key] && character[key].trim())" style="display:block; font-size:0.72rem; color:var(--text-muted); font-style:italic;">empty</span>
+                                        <span v-if="key === 'first_mes' && (character[key] && character[key].trim())" style="display:block; font-size:0.72rem; color:var(--text-muted);">Sets session response length</span>
+                                    </span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-size:0.85rem; font-weight:500; color:white; display:block; margin-bottom:0.4rem;">AI Phrase Blocklist <span style="font-weight:400; color:var(--text-muted);">(one phrase per line)</span></label>
+                        <textarea class="node-textarea" v-model="repairIsmBlocklist" rows="5" style="font-family:monospace; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:0.5rem; border:1px solid var(--border-color); border-radius:4px;" placeholder="data collected&#10;analysis concluded&#10;as an AI"></textarea>
+                    </div>
+
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end; padding-top:0.5rem; border-top:1px solid var(--border-color);">
+                        <button class="primary-btn" style="background:transparent; border:1px solid var(--border-color);" @click="closeRepairModal">Cancel</button>
+                        <button class="primary-btn" style="background:var(--danger);" @click="repairPersonaAI">
+                            <i class="fas fa-stethoscope"></i> Repair Voice
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Phase: generating -->
+                <div v-if="repairPhase === 'generating'">
+                    <div style="text-align:center; padding:1rem 0 0.5rem;">
+                        <i class="fas fa-heartbeat fa-pulse" style="font-size:2rem; color:var(--danger);"></i>
+                        <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted);">Rewriting character voice…</p>
+                    </div>
+                    <pre style="max-height:340px; overflow-y:auto; font-size:0.75rem; font-family:monospace; background:rgba(0,0,0,0.3); padding:0.75rem; border-radius:6px; white-space:pre-wrap; word-break:break-all;">{{ repairStreamRaw }}</pre>
+                </div>
+
+                <!-- Phase: review -->
+                <div v-if="repairPhase === 'review'">
+                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                        <button class="node-btn" @click="Object.keys(repairAccepted).forEach(k => repairAccepted[k] = true)">Accept All</button>
+                        <button class="node-btn" @click="Object.keys(repairAccepted).forEach(k => repairAccepted[k] = false)">Reject All</button>
+                    </div>
+
+                    <div style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem;">
+                        <div v-for="(result, key) in repairResults" :key="key" style="border:1px solid var(--border-color); border-radius:6px; padding:0.75rem;">
+                            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                                <input type="checkbox" v-model="repairAccepted[key]">
+                                <span style="font-size:0.85rem; font-weight:600; color:white; text-transform:capitalize;">{{ result.label }}</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">{{ repairAccepted[key] ? '— will apply' : '— skipped' }}</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                                <div>
+                                    <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.25rem;">Before</div>
+                                    <textarea readonly :value="result.original" rows="6" style="width:100%; font-size:0.75rem; font-family:monospace; background:rgba(180,30,30,0.12); border:1px solid rgba(180,30,30,0.3); border-radius:4px; padding:0.4rem; resize:vertical; color:var(--text-color);"></textarea>
+                                </div>
+                                <div>
+                                    <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.25rem;">After</div>
+                                    <textarea readonly :value="result.repaired" rows="6" style="width:100%; font-size:0.75rem; font-family:monospace; background:rgba(30,140,60,0.12); border:1px solid rgba(30,140,60,0.3); border-radius:4px; padding:0.4rem; resize:vertical; color:var(--text-color);"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+                        <button class="primary-btn" style="background:transparent; border:1px solid var(--border-color); color:var(--text-color);" @click="repairPhase = 'config'">Back</button>
+                        <button class="primary-btn" style="background:transparent; border:1px solid var(--border-color); color:var(--text-color);" @click="closeRepairModal">Discard</button>
+                        <button class="primary-btn" style="background:var(--success);" @click="applyRepairResults">
+                            <i class="fas fa-check"></i> Apply Accepted
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2134,6 +2289,19 @@
                 const editingChatIndex = ref(-1);
                 const editingChatContent = ref('');
 
+                const showRepairModal = ref(false);
+                const repairPhase = ref('config');
+                const repairFieldSelection = reactive({
+                    personality: true, system_prompt: false,
+                    scenario: false, first_mes: true, mes_example: false,
+                    post_history_instructions: false
+                });
+                const repairDescriptorSelection = reactive({});
+                const repairIsmBlocklist = ref('data collected\nanalysis concluded\nas an AI\ncannot assist\nI must emphasize\nit\'s important to note\nI understand that\ncertainly\nI\'d be happy to\nnoteworthy\nI want to clarify\nboundaries are important\nI apologize\nI cannot and will not\nof course\nfascinating\nit seems\nI must say');
+                const repairStreamRaw = ref('');
+                const repairResults = ref({});
+                const repairAccepted = ref({});
+
                 // State Data
                 const character = reactive({
                     id: Date.now().toString(),
@@ -2164,7 +2332,10 @@
                     alt_greeting: "- Write an alternate initial greeting message to initiate the roleplay. Make it engaging.",
                     scenario: "- Keep the output to exactly one paragraph.\n- Make it a generalized setting or background for the roleplay.",
                     mes_example: "- Generate exactly 4 to 5 examples of dialogue.\n- Each example should have 3 to 4 dialogue exchanges between the user and the character.\n- You MUST start each new example block with the exact tag <START> on its own line.\n- Use the {{char}}: prefix to denote a character message.\n- Use the {{user}}: prefix to denote a user message.\n- The dialogue should accurately reflect the character's traits, lore, and physical descriptions provided in the context.\n- Describe how the character speaks and acts using asterisks for actions.\n- Spoken words MUST be enclosed in double quotes.",
-                    lorebook: "- Use the provided keywords to write a concise lore entry.\n- Make it descriptive and relevant to the character context."
+                    lorebook: "- Use the provided keywords to write a concise lore entry.\n- Make it descriptive and relevant to the character context.",
+                    persona_repair: "You are a character voice specialist rewriting roleplay character card fields using Ali:Chat voice technique.\n\nFIELD RULES:\n- personality: character speaks directly in first person — fragments, declarations, contradictions. No adjective lists.\n- first_mes: scene-drop opener. Character acts or speaks immediately. End on action, tension, or open direction — never a helpdesk closer ('How can I help?', 'What would you like to do?').\n- mes_example: use <START> separators between exchanges. Include character name inside at least one *action phrase* per exchange. Wrap scene-setting environment details in [square brackets].\n- scenario: situational grounding — what the world feels like right now for the character, not an objective briefing.\n- system_prompt / post_history_instructions: keep author-voice framing; do not apply interview style here.\n\nVOICE ANCHORING:\n- Lock onto 2-3 verbal tics or sentence rhythms unique to this character and repeat them.\n- Avoid symmetrical balanced sentences — fragments, em-dashes, run-ons.\n- Relational sensory detail over abstract traits ('she checks the exit before sitting' not 'she is cautious').\n- Never negation framing ('she doesn't trust') — rewrite as positive behavior ('she tests everyone before giving an inch').\n- Collapse redundant trait pairs to their sharper single equivalent.\n\nBLOCKLIST: Strip any phrase matching:\n{{blocklist}}\n\nPRESERVATION RULES:\n- Keep all {{char}} and {{user}} tokens exactly as-is.\n- Preserve all factual details, relationships, setting, and lore.\n- Do NOT summarize, shorten, or add new invented facts.\n\nOutput ONLY a valid JSON object with the same keys as the input. No markdown fences, no commentary.",
+                    persona_repair_interview: "You are a character voice specialist writing a persona interview block.\n\nCRITICAL FORMAT RULE: The interviewer label is ALWAYS written as exactly 'Interviewer:' — NEVER '{{user}}:'. Do not use {{user}} anywhere in your output.\n\nEXACT FORMAT (follow this precisely):\nInterviewer: Short question here?\n{{char}}: Answer in character voice. *Action beat if relevant.*\n\nInterviewer: Another short question?\n{{char}}: Another answer.\n\nUsing the character profile provided, write 5 to 7 exchanges following this format:\n- Interviewer: lines are SHORT (under 10 words)\n- {{char}}: lines answer in the character's authentic voice — clipped or flowing depending on personality, using their speech rhythm, verbal tics, and sensory detail\n- Cover: appearance/physicality, core personality, key motivation, relationships, how they handle conflict\n- Final line: a single plain-text summary of speech patterns and behavioral anchors (e.g. 'Speech patterns: ...')\n- Do NOT wrap in JSON or markdown — output raw interview text only\n- Keep all {{char}} tokens exactly as-is\n- Do NOT invent facts not present in the profile",
+                    persona_repair_descriptor: "You are converting character card descriptors into Ali:Chat first-person interview format.\n\nEXACT FORMAT REQUIRED — every descriptor must become {{user}}: / {{char}}: dialogue:\n\nEXAMPLE INPUT (Appearance descriptor):\n\"A lean, weathered man with sharp eyes and scarred hands. He moves quietly for his size and rarely makes eye contact.\"\n\nEXAMPLE OUTPUT:\n\"{{user}}: What do you look like?\\n{{char}}: Lean. Scarred hands — the kind you get from work, not sport. *{{char}} glances down at them briefly.* Eyes move before I do. Habit. I don't hold eye contact long — not because I'm nervous. Because I'm reading.\"\n\nRULES:\n- {{user}}: line = short direct question about this descriptor's topic (under 10 words)\n- {{char}}: line = first-person answer in the CHARACTER'S OWN VOICE using 'I', 'me', 'my' — NEVER third-person 'she/her'\n- Include *action beats* in asterisks to show behavior, not just words\n- 1 to 3 exchanges per descriptor depending on content depth\n- Match the character's speech rhythm from the profile — clipped soldier vs. flowing intellectual vs. sarcastic loner, etc.\n- Replace abstract labels with behavioral specifics: not 'I am loyal' but 'I take the hit first. Every time.'\n- Never negation framing: not 'I don't trust easily' but 'I watch how someone treats a stranger. That tells me everything.'\n- Preserve all facts from the original — do not invent new information\n- Keep all {{char}} and {{user}} tokens exactly as-is\n\nBLOCKLIST — strip any phrase matching:\n{{blocklist}}\n\nReturn ONLY valid JSON — include every id you received:\n{\"descriptors\": [{\"id\": \"...\", \"content\": \"{{user}}: ...\\n{{char}}: ...\"}]}\nNo markdown fences, no commentary."
                 };
 
                 const settings = reactive({
@@ -3165,12 +3336,12 @@
                 };
 
                 // AI Integration
-                const callAI = async (promptMsg, onChunk = null) => {
+                const callAI = async (promptMsg, onChunk = null, systemMsg = null) => {
                     if (!settings.aiEnabled || !settings.apiKey) {
                         alert("Please enable AI and set an API Key in Settings.");
                         return null;
                     }
-                    const systemPrompt = "You are a creative writing assistant for roleplay character development. Keep your response concise, relevant, and well-formatted. Output only the requested text without markdown backticks unless requested. No pleasantries.";
+                    const systemPrompt = systemMsg || "You are a creative writing assistant for roleplay character development. Keep your response concise, relevant, and well-formatted. Output only the requested text without markdown backticks unless requested. No pleasantries.";
                     try {
                         if (settings.aiProvider === 'gemini') {
                             const rawModel = settings.modelName || 'gemini-1.5-flash';
@@ -3311,6 +3482,172 @@
                     const res = await callAI(prompt, (partial) => { entry.content = partial; });
                     if (res) entry.content = res;
                     isGenerating.value = null;
+                };
+
+                const hasDescriptionContent = computed(() =>
+                    !!(character.description && character.description.trim()) ||
+                    !!(character.extensions && character.extensions.categories && character.extensions.categories.length > 0)
+                );
+
+                const getCombinedDescription = () => {
+                    let combined = (character.description || '').trim();
+                    if (character.extensions && character.extensions.categories) {
+                        character.extensions.categories.forEach(cat => {
+                            if (cat.name && cat.descriptors && cat.descriptors.length > 0) {
+                                combined += '\n\n[' + cat.name + ']';
+                                cat.descriptors.forEach(desc => {
+                                    const n = desc.name ? desc.name + ': ' : '';
+                                    if (n || desc.content) combined += '\n' + n + (desc.content || '');
+                                });
+                            }
+                        });
+                    }
+                    return combined.trim();
+                };
+
+                const repairPersonaAI = async () => {
+                    if (!settings.aiEnabled || !settings.apiKey) return;
+                    const selectedFields = Object.keys(repairFieldSelection).filter(k => repairFieldSelection[k] && character[k] && character[k].trim());
+                    const selectedDescs = [];
+                    character.extensions.categories.forEach(cat => {
+                        cat.descriptors.forEach(desc => {
+                            if (repairDescriptorSelection[desc.id] && desc.content && desc.content.trim()) {
+                                selectedDescs.push({ id: desc.id, category: cat.name, name: desc.name, content: desc.content });
+                            }
+                        });
+                    });
+                    if (!selectedFields.length && !selectedDescs.length) { alert('Select at least one descriptor or field to repair.'); return; }
+                    repairPhase.value = 'generating';
+                    repairStreamRaw.value = '';
+                    repairResults.value = {};
+                    repairAccepted.value = {};
+                    const blocklist = repairIsmBlocklist.value.trim().split('\n').filter(Boolean).map(l => '- ' + l).join('\n');
+
+                    // --- Descriptors: single batched call ---
+                    if (selectedDescs.length) {
+                        const descPrompt = settings.customPrompts.persona_repair_descriptor.replace('{{blocklist}}', blocklist) +
+                            '\n\nCharacter name: ' + (character.name || 'Unknown') +
+                            '\n\nDescriptors to rewrite:\n' + JSON.stringify({ descriptors: selectedDescs }, null, 2);
+                        repairStreamRaw.value = '[Rewriting descriptors...]\n';
+                        const descSystemPrompt = "You are a character voice conversion tool. Your ONLY job is to output valid JSON. The character responses you write MUST use first-person voice (I, me, my) in {{user}}: / {{char}}: dialogue format with *action beats* in asterisks. NEVER write third-person prose descriptions. Follow the exact format shown in the examples.";
+                        const res = await callAI(descPrompt, (partial) => { repairStreamRaw.value = partial; }, descSystemPrompt);
+                        const raw = res || repairStreamRaw.value;
+                        try {
+                            const match = raw.match(/\{[\s\S]*\}/);
+                            if (!match) throw new Error('No JSON');
+                            const parsed = JSON.parse(match[0]);
+                            (parsed.descriptors || []).forEach(d => {
+                                const orig = selectedDescs.find(s => s.id === d.id);
+                                if (orig && d.content !== undefined) {
+                                    repairResults.value['desc_' + d.id] = {
+                                        type: 'descriptor', id: d.id,
+                                        label: orig.category + ' → ' + orig.name,
+                                        original: orig.content, repaired: d.content
+                                    };
+                                    repairAccepted.value['desc_' + d.id] = true;
+                                }
+                            });
+                        } catch {
+                            alert('Could not parse descriptor response. Raw output:\n' + raw.slice(0, 300));
+                            repairPhase.value = 'config'; return;
+                        }
+                    }
+
+                    // --- Intro category: voice interview ---
+                    {
+                        const profileContext = JSON.stringify({
+                            name: character.name || 'Unknown',
+                            description: character.description || '',
+                            personality: character.personality || '',
+                            scenario: character.scenario || '',
+                            first_mes: character.first_mes || ''
+                        }, null, 2);
+                        const interviewPrompt = settings.customPrompts.persona_repair_interview +
+                            '\n\nCharacter profile:\n' + profileContext;
+                        const interviewSystemPrompt = "You are a character voice specialist. Output ONLY the raw interview text as specified — no JSON, no markdown fences, no preamble.";
+                        repairStreamRaw.value += '\n[Writing voice interview...]\n';
+                        const interviewRes = await callAI(interviewPrompt, (partial) => { repairStreamRaw.value = partial; }, interviewSystemPrompt);
+                        if (interviewRes && interviewRes.trim()) {
+                            const interviewCleaned = interviewRes.trim().replace(/\{\{user\}\}:/g, 'Interviewer:');
+                            repairResults.value['intro_category'] = {
+                                type: 'intro_category',
+                                label: 'NEW CATEGORY — Persona Voice Profile',
+                                original: '(does not exist yet)',
+                                repaired: interviewCleaned
+                            };
+                            repairAccepted.value['intro_category'] = true;
+                        }
+                    }
+
+                    // --- Other fields: JSON rewrite call ---
+                    if (selectedFields.length) {
+                        const payload = {};
+                        selectedFields.forEach(k => { payload[k] = character[k]; });
+                        const basePrompt = settings.customPrompts.persona_repair.replace('{{blocklist}}', blocklist);
+                        const prompt = basePrompt + '\n\nInput:\n' + JSON.stringify(payload, null, 2);
+                        repairStreamRaw.value += '\n[Rewriting fields: ' + selectedFields.join(', ') + '...]\n';
+                        const res = await callAI(prompt, (partial) => { repairStreamRaw.value = partial; });
+                        const raw = res || repairStreamRaw.value;
+                        try {
+                            const match = raw.match(/\{[\s\S]*\}/);
+                            if (!match) throw new Error('No JSON');
+                            const parsed = JSON.parse(match[0]);
+                            selectedFields.forEach(k => {
+                                if (parsed[k] !== undefined) {
+                                    repairResults.value['field_' + k] = { type: 'field', key: k, label: k.replace(/_/g, ' '), original: character[k], repaired: parsed[k] };
+                                    repairAccepted.value['field_' + k] = true;
+                                }
+                            });
+                        } catch {
+                            alert('Could not parse field response. Raw output:\n' + raw.slice(0, 300));
+                            if (!selectedDescs.length) { repairPhase.value = 'config'; return; }
+                        }
+                    }
+
+                    repairPhase.value = 'review';
+                };
+
+                const applyRepairResults = () => {
+                    takeSnapshot();
+                    Object.keys(repairResults.value).forEach(rk => {
+                        if (!repairAccepted.value[rk]) return;
+                        const result = repairResults.value[rk];
+                        if (result.type === 'descriptor') {
+                            character.extensions.categories.forEach(cat => {
+                                cat.descriptors.forEach(desc => {
+                                    if (desc.id === result.id) desc.content = result.repaired;
+                                });
+                            });
+                        } else if (result.type === 'field') {
+                            character[result.key] = result.repaired;
+                        } else if (result.type === 'intro_category') {
+                            const ts = Date.now();
+                            const newCat = {
+                                id: 'cat_' + ts + '_' + Math.floor(Math.random() * 10000),
+                                name: '✦ Persona Voice Profile',
+                                descriptors: [{
+                                    id: 'desc_' + ts + '_' + Math.floor(Math.random() * 10000),
+                                    name: 'Voice Interview',
+                                    content: result.repaired
+                                }]
+                            };
+                            character.extensions.categories.unshift(newCat);
+                        }
+                    });
+                    showRepairModal.value = false;
+                    repairPhase.value = 'config';
+                    repairStreamRaw.value = '';
+                    repairResults.value = {};
+                    repairAccepted.value = {};
+                };
+
+                const closeRepairModal = () => {
+                    if (repairPhase.value === 'generating') return;
+                    showRepairModal.value = false;
+                    repairPhase.value = 'config';
+                    repairStreamRaw.value = '';
+                    repairResults.value = {};
+                    repairAccepted.value = {};
                 };
 
                 const insertMacro = (event, obj, key, macro) => {
@@ -3535,7 +3872,10 @@
                     showFindReplace, findText, replaceText, findReplaceCount, doFindReplace,
                     showExportPreview, exportPreviewData, openExportPreview,
                     editingChatIndex, editingChatContent, startChatEdit, saveChatEdit,
-                    commonTags, appendTag
+                    commonTags, appendTag,
+                    showRepairModal, repairPhase, repairFieldSelection, repairDescriptorSelection, repairIsmBlocklist,
+                    repairStreamRaw, repairResults, repairAccepted,
+                    repairPersonaAI, applyRepairResults, closeRepairModal
                 }
             }
         });
